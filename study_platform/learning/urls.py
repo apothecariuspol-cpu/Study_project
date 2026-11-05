@@ -30,6 +30,11 @@ urlpatterns = [
         name="generate_daily_plan",
     ),
     path(
+        "start-daily-plan/",
+        views.start_daily_plan,
+        name="start_daily_plan",
+    ),
+    path(
         "save-daily-plan-settings/",
         views.save_daily_plan_settings,
         name="save_daily_plan_settings",
