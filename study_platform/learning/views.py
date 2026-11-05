@@ -1,6 +1,7 @@
 
 import hashlib
 import hmac
+import random
 
 from django.conf import settings
 from django.db import models
@@ -63,7 +64,7 @@ def _ordered_student_lessons(student, subject):
     )
 
 
-def generate_daily_lessons(student, subject, count=3):
+def generate_daily_lessons(student, subject, count=3, mode="auto"):
     """Подбирает уроки по четырём согласованным приоритетам."""
     try:
         count = max(1, min(20, int(count)))
@@ -73,6 +74,10 @@ def generate_daily_lessons(student, subject, count=3):
     lessons = _ordered_student_lessons(student, subject)
     if not lessons:
         return []
+
+    # Случайный режим не использует приоритеты персонального алгоритма.
+    if mode == "random":
+        return random.sample(lessons, min(count, len(lessons)))
 
     progress_rows = {
         row.lesson_id: row
@@ -154,14 +159,9 @@ def generate_daily_lessons(student, subject, count=3):
     add_from(priority_two, regular_limit)
     add_from(priority_three, regular_limit)
 
-    if special_lesson and len(chosen) < count:
+    if special_lesson and special_lesson.id not in chosen_ids and len(chosen) < count:
         chosen.append(special_lesson)
         chosen_ids.add(special_lesson.id)
-        progress, _ = StudentLessonProgress.objects.get_or_create(
-            student=student, lesson=special_lesson
-        )
-        progress.last_recommended_at = timezone.now()
-        progress.save(update_fields=["last_recommended_at"])
 
     # Заполняем оставшиеся места последовательными уроками, затем прочими
     # особыми блоками, если они ещё не попали в план.
@@ -169,6 +169,17 @@ def generate_daily_lessons(student, subject, count=3):
     add_from(priority_two)
     add_from(priority_three)
     add_from(priority_four)
+
+    # Фиксируем рекомендацию для особых уроков, даже если они уже попали
+    # в план через один из первых трёх приоритетов.
+    recommended_at = timezone.now()
+    for lesson in chosen:
+        if lesson.special_category in ("culture", "maps"):
+            progress, _ = StudentLessonProgress.objects.get_or_create(
+                student=student, lesson=lesson
+            )
+            progress.last_recommended_at = recommended_at
+            progress.save(update_fields=["last_recommended_at"])
 
     return chosen[:count]
 
@@ -589,7 +600,13 @@ def generate_daily_plan(request):
     if not subject:
         return JsonResponse({"ok": False, "error": "Предмет недоступен."}, status=404)
 
-    lessons = generate_daily_lessons(student, subject, request.POST.get("count", 3))
+    mode = request.POST.get("mode", "auto").strip().lower()
+    if mode not in {"auto", "random"}:
+        return JsonResponse({"ok": False, "error": "Неизвестный режим подбора."}, status=400)
+
+    lessons = generate_daily_lessons(
+        student, subject, request.POST.get("count", 3), mode=mode
+    )
     return JsonResponse({
         "ok": True,
         "items": [
