@@ -527,17 +527,37 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 .daily-plan-divider { height: 1px; margin: 0 0 2rem; border: 0; background: #080808; }
 .daily-plan-task-list { display: grid; gap: .65rem; margin-bottom: 3.5rem; }
 .daily-plan-task {
-    display: flex;
+    display: grid;
+    grid-template-columns: 2.9rem minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
     gap: .6rem;
     font-size: .95rem;
     line-height: 1.2;
 }
-.daily-plan-task .stepper { margin: 0; min-width: 3.8rem; height: 1.45rem; }
-.daily-plan-task .stepper button { flex-basis: .9rem; width: .9rem; }
-.daily-plan-task .stepper button svg { width: .7rem; height: .9rem; }
-.daily-plan-task .stepper-value { flex-basis: 1rem; width: 1rem; font-size: 1rem; font-weight: 500; }
+.daily-plan-task .plan-task-count {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 2.9rem;
+    height: 1.45rem;
+    border: 1px solid #080808;
+    border-radius: .25rem;
+    font-size: 1rem;
+}
+.daily-plan-task .plan-task-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: .65rem;
+    font-weight: 600;
+}
+.daily-plan-task .plan-task-controls button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1;
+}
 .daily-plan-changes { margin-top: auto; }
 .daily-plan-changes-title { margin-bottom: .65rem; font-size: .95rem; }
 .change-bar {
@@ -559,6 +579,46 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
     color: #fff;
 }
 .change-bar-label strong { font-size: .65rem; }
+.plan-progress {
+    display: flex;
+    position: relative;
+    width: 100%;
+    height: 1.15rem;
+    margin-top: .35rem;
+    background: #d9d9d9;
+    overflow: hidden;
+    font-size: .7rem;
+    line-height: 1;
+}
+.plan-progress-base {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 0 0 var(--base-width, 10%);
+    min-width: 2.5rem;
+    padding-right: .35rem;
+    background: #080808;
+    color: #fff;
+    font-weight: 700;
+}
+.plan-progress-change {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 var(--change-width, 2%);
+    min-width: 2.7rem;
+    background: #a7f39a;
+    border: 1px solid #080808;
+}
+.plan-progress-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    padding-right: .45rem;
+    color: #080808;
+    font-size: .65rem;
+}
 .change-bar-delta {
     display: flex;
     align-items: center;
@@ -570,18 +630,34 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
     font-size: .62rem;
 }
 .daily-plan-quote {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     margin: 5.9rem 0 0;
     font-size: .95rem;
     line-height: 1.2;
-    text-align: center;
+    text-align: left;
 }
 .daily-plan-quote span { border-bottom: 1px solid #080808; padding-bottom: .15rem; }
+.daily-plan-quote cite {
+    display: block;
+    margin-top: .15rem;
+    color: var(--gray);
+    font-size: .85rem;
+    font-style: normal;
+}
 @media (max-width: 520px) {
     .daily-plan-modal {
         width: min(52rem, calc(100vw - .75rem));
         min-height: min(48rem, calc(100dvh - .75rem));
         padding: 4rem 3.9rem 5.4rem;
     }
+    .daily-plan-task { grid-template-columns: 2.3rem minmax(0, 1fr) auto; gap: .5rem; font-size: 1rem; }
+    .daily-plan-task .plan-task-count { width: 2.3rem; height: 1.7rem; font-size: .85rem; }
+    .daily-plan-task .plan-task-controls { gap: .3rem; }
+    .daily-plan-task .plan-task-controls button { font-size: 1.2rem; }
+    .plan-progress { height: 1.2rem; }
+    .plan-progress-label { font-size: .75rem; padding-right: .7rem; }
 }
 @media (max-width: 370px) {
     .daily-plan-modal { padding-right: 3.2rem; padding-left: 3.2rem; }
