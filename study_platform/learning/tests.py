@@ -92,7 +92,7 @@ class TeacherCollectionDisplayTests(TestCase):
         collection.students.add(student)
         material = TeacherCollectionFile.objects.create(
             collection=collection,
-            file=SimpleUploadedFile("cards.pdf", b"test pdf content", content_type="application/pdf"),
+            file="teacher_collections/test/cards.pdf",
             description="Карточки для повторения",
         )
 
