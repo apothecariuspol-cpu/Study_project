@@ -216,3 +216,51 @@ class TeacherCollectionDisplayTests(TestCase):
         self.assertContains(response, "Дополнительные материалы для повторения.")
         self.assertContains(response, "Карточки для повторения")
         self.assertContains(response, reverse("download_teacher_collection_file", args=[material.id]))
+
+class DailyPlanLaunchTests(TestCase):
+    def setUp(self):
+        self.subject = Subject.objects.create(title="История")
+        self.student = Student.objects.create(name="Тестовый ученик", exam="EGE")
+        self.student.subjects.add(self.subject)
+        self.topic = Topic.objects.create(subject=self.subject, title="Древняя Русь")
+        self.first = Lesson.objects.create(
+            topic=self.topic, title="Первый урок", order=1, is_published=True
+        )
+        self.second = Lesson.objects.create(
+            topic=self.topic, title="Второй урок", order=2, is_published=True
+        )
+        StudentAccess.objects.create(
+            student=self.student,
+            code_lookup="plan-launch-lookup",
+            code_hash="plan-launch-hash",
+        )
+        session = self.client.session
+        session["student_id"] = self.student.id
+        session.save()
+
+    def test_cabinet_auto_plan_launches_first_generated_lesson(self):
+        response = self.client.post(
+            reverse("start_daily_plan"),
+            {"mode": "auto", "subject_id": self.subject.id, "count": "1"},
+        )
+        self.assertRedirects(
+            response,
+            reverse("lesson_detail", args=[self.first.id]),
+            fetch_redirect_response=False,
+        )
+
+    def test_theory_manual_plan_launches_first_lesson_from_selected_topic(self):
+        response = self.client.post(
+            reverse("start_daily_plan"),
+            {
+                "mode": "choose",
+                "subject_filter": [str(self.subject.id)],
+                "topic_ids": [str(self.topic.id)],
+            },
+        )
+        self.assertRedirects(
+            response,
+            reverse("lesson_detail", args=[self.first.id]),
+            fetch_redirect_response=False,
+        )
+
