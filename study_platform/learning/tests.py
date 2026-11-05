@@ -62,6 +62,25 @@ class DailyPlanGeneratorTests(TestCase):
         sample.assert_called_once()
         self.assertEqual(result, expected)
 
+    def test_auto_mode_uses_unfinished_then_errors_then_new_topics(self):
+        unfinished = self.make_lesson("Незавершённая", 1)
+        error_lesson = self.make_lesson("С ошибками", 2)
+        new_lesson = self.make_lesson("Новая", 3)
+        StudentLessonProgress.objects.create(
+            student=self.student, lesson=unfinished,
+            is_started=True, is_completed=False,
+        )
+        StudentLessonProgress.objects.create(
+            student=self.student, lesson=error_lesson,
+            is_started=True, is_completed=True, error_count=2,
+        )
+
+        result = generate_daily_lessons(
+            self.student, self.subject, count=3, mode="auto"
+        )
+
+        self.assertEqual(result, [unfinished, error_lesson, new_lesson])
+
     def test_random_mode_keeps_unfinished_error_new_priority_groups(self):
         unfinished = self.make_lesson("Незавершённая", 1)
         error_lesson = self.make_lesson("С ошибками", 2)
