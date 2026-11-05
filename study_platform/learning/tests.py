@@ -113,6 +113,59 @@ class DailyPlanGeneratorTests(TestCase):
         self.assertEqual(set(result), set(published))
 
 
+class DailyPlanSettingsTests(TestCase):
+    def setUp(self):
+        self.subject = Subject.objects.create(title="История")
+        self.student = Student.objects.create(name="Тестовый ученик", exam="EGE")
+        self.student.subjects.add(self.subject)
+        StudentAccess.objects.create(
+            student=self.student,
+            code_lookup="plan-settings-lookup",
+            code_hash="plan-settings-hash",
+        )
+        session = self.client.session
+        session["student_id"] = self.student.id
+        session.save()
+
+    def test_plan_settings_are_saved_and_used_by_cabinet_and_rubricator(self):
+        response = self.client.post(
+            reverse("save_daily_plan_settings"),
+            {
+                "subject_id": self.subject.id,
+                "theory_count": "5",
+                "practice_count": "14",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content, {"ok": True})
+
+        cabinet = self.client.get(reverse("cabinet"))
+        self.assertEqual(cabinet.status_code, 200)
+        self.assertContains(cabinet, 'value="5" aria-label="Количество уроков теории"')
+
+        rubricator = self.client.get(reverse("rubricator"))
+        self.assertEqual(rubricator.status_code, 200)
+        self.assertContains(rubricator, '"1": 5')
+
+    def test_cabinet_does_not_use_manual_rubricator_selection(self):
+        topic = Topic.objects.create(subject=self.subject, title="Ручная тема")
+        session = self.client.session
+        session["student_id"] = self.student.id
+        session["rubricator_selection"] = {
+            "mode": "chosen",
+            "subject_ids": [str(self.subject.id)],
+            "topic_ids": [str(topic.id)],
+            "lesson_ids": [],
+            "microtopic_ids": [],
+        }
+        session.save()
+
+        response = self.client.get(reverse("cabinet"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Ручная тема")
+        self.assertContains(response, 'data-mode="auto"')
+
+
 class TeacherCollectionDisplayTests(TestCase):
     def test_cabinet_shows_collection_description_and_download_links(self):
         subject = Subject.objects.create(title="История")
