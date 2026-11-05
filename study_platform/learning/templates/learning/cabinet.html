@@ -800,8 +800,15 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                         {% for a in tab.assignments %}
                         <li class="collection is-open">
                             <button class="collection-toggle" type="button" aria-expanded="true">{{ a.title }}<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
-                            <div class="assign-meta"><span>Практика</span><b>{{ a.practice|default:"Подборка" }}</b></div>
-                            {% if a.cards_url %}<div class="assign-meta"><span>Карточки</span><b><a href="{{ a.cards_url }}">Скачать (pdf)</a></b></div>{% endif %}
+                            {% if a.description %}
+                            <div class="assign-meta"><span>Описание</span><b>{{ a.description }}</b></div>
+                            {% endif %}
+                            {% for material in a.materials.all %}
+                            <div class="assign-meta">
+                                <span>{% if forloop.first %}Файлы{% endif %}</span>
+                                <b><a href="{% url 'download_teacher_collection_file' material.id %}">{{ material.description|default:"Скачать файл" }}</a></b>
+                            </div>
+                            {% endfor %}
                         </li>
                         {% empty %}
                         {% if student.is_demo %}
@@ -1376,7 +1383,11 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
         const countInput = panel ? panel.querySelector(".plan-row .stepper-value") : null;
         const count = countInput ? countInput.value : "3";
         group.innerHTML = '<div class="daily-plan-empty">Подбираем уроки…</div>';
-        const body = new URLSearchParams({ subject_id: subjectId, count: count });
+        const body = new URLSearchParams({
+            subject_id: subjectId,
+            count: count,
+            mode: overlay.dataset.mode || "auto"
+        });
         try {
             const response = await fetch(overlay.dataset.generateUrl, {
                 method: "POST",
