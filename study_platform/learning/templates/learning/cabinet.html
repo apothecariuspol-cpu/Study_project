@@ -1115,6 +1115,24 @@ function updateActionLinks(panel) {
         generate.dataset.practice = practice;
         generate.dataset.subject = panel.dataset.subject;
     }
+    const subjectId = panel.dataset.subjectId;
+    if (subjectId) {
+        const csrfMatch = document.cookie.match(new RegExp("(^|; )csrftoken=([^;]*)"));
+        const csrf = csrfMatch ? decodeURIComponent(csrfMatch[2]) : "";
+        fetch("{% url 'save_daily_plan_settings' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                "X-CSRFToken": csrf,
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: new URLSearchParams({
+                subject_id: subjectId,
+                theory_count: theory,
+                practice_count: practice
+            }).toString()
+        }).catch(function () {});
+    }
 }
 
 document.querySelectorAll(".plan-row").forEach(function (row) {
