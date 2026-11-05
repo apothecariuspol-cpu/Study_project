@@ -1469,7 +1469,6 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
     const date = document.getElementById("daily-plan-date");
     const subjectChoices = Array.from(overlay.querySelectorAll(".daily-subject-choice"));
     const subjectGroups = Array.from(overlay.querySelectorAll(".daily-plan-subject-group"));
-    const hasSavedSelection = overlay.dataset.hasSelection === "true";
     let previousFocus = null;
 
     function updatePlanTopics() {
@@ -1551,15 +1550,12 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
         previousFocus = document.activeElement;
         date.textContent = new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
 
-        // Если пользователь ещё не сохранял выбор в рубрикаторе,
-        // при первом открытии показываем предмет текущей вкладки кабинета.
-        if (!hasSavedSelection) {
-            const currentPanel = button.closest(".subject-panel");
-            const currentSubjectId = currentPanel ? currentPanel.dataset.subjectId : "";
-            subjectChoices.forEach(function (choice) {
-                choice.checked = choice.value === currentSubjectId;
-            });
-        }
+        // Кабинет всегда начинает собственную генерацию для текущего предмета.
+        const currentPanel = button.closest(".subject-panel");
+        const currentSubjectId = currentPanel ? currentPanel.dataset.subjectId : "";
+        subjectChoices.forEach(function (choice) {
+            choice.checked = choice.value === currentSubjectId;
+        });
 
         updatePlanTopics();
         if (overlay.dataset.mode === "auto" || overlay.dataset.mode === "random") {
