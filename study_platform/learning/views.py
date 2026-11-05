@@ -65,19 +65,17 @@ def _ordered_student_lessons(student, subject):
 
 
 def generate_daily_lessons(student, subject, count=3, mode="auto"):
-    """Подбирает уроки по четырём согласованным приоритетам."""
+    """Подбирает уроки: незавершённые, затем с ошибками, затем новые."""
     try:
-        count = max(1, min(20, int(count)))
+        count = max(0, min(99, int(count)))
     except (TypeError, ValueError):
-        count = 3
+        count = 0
+    if count == 0:
+        return []
 
     lessons = _ordered_student_lessons(student, subject)
     if not lessons:
         return []
-
-    # Случайный режим не использует приоритеты персонального алгоритма.
-    if mode == "random":
-        return random.sample(lessons, min(count, len(lessons)))
 
     progress_rows = {
         row.lesson_id: row
@@ -85,103 +83,77 @@ def generate_daily_lessons(student, subject, count=3, mode="auto"):
             student=student, lesson__in=lessons
         )
     }
-    positions = {lesson.id: index for index, lesson in enumerate(lessons)}
-    latest = max(
-        (row for row in progress_rows.values() if row.last_worked_at),
-        key=lambda row: row.last_worked_at,
-        default=None,
-    )
 
-    # Приоритет 1: последовательное движение по рубрикатору после
-    # последнего урока, с переходом к началу, если дошли до конца.
-    start_index = positions.get(latest.lesson_id, -1) + 1 if latest else 0
-    sequence = lessons[start_index:] + lessons[:start_index]
-    priority_one = [
-        lesson for lesson in sequence
-        if not progress_rows.get(lesson.id) or not progress_rows[lesson.id].is_completed
-    ]
+    unfinished = []
+    with_errors = []
+    new_lessons = []
+    for lesson in lessons:
+        progress = progress_rows.get(lesson.id)
+        if progress and progress.is_started and not progress.is_completed:
+            unfinished.append(lesson)
+        elif progress and progress.error_count > 0:
+            with_errors.append(lesson)
+        elif not progress or (not progress.is_started and not progress.is_completed):
+            new_lessons.append(lesson)
 
-    # Приоритет 2: уроки с ошибками, сначала те, где ошибок больше.
-    priority_two = sorted(
-        [lesson for lesson in lessons if progress_rows.get(lesson.id)
-         and progress_rows[lesson.id].error_count > 0],
-        key=lambda lesson: (
+    if mode == "random":
+        chooser = lambda items: random.sample(items, len(items))
+        unfinished = chooser(unfinished)
+        with_errors = chooser(with_errors)
+        new_lessons = chooser(new_lessons)
+    else:
+        unfinished.sort(key=lambda lesson: (
+            progress_rows[lesson.id].last_worked_at or timezone.make_aware(
+                timezone.datetime.min
+            ),
+            lesson.topic.order, lesson.order, lesson.id,
+        ))
+        with_errors.sort(key=lambda lesson: (
             -progress_rows[lesson.id].error_count,
-            progress_rows[lesson.id].last_worked_at.timestamp() if progress_rows[lesson.id].last_worked_at else 0,
-        ),
-    )
-
-    # Приоритет 3: начатые, но ещё не завершённые уроки.
-    priority_three = sorted(
-        [lesson for lesson in lessons if progress_rows.get(lesson.id)
-         and progress_rows[lesson.id].is_started
-         and not progress_rows[lesson.id].is_completed],
-        key=lambda lesson: progress_rows[lesson.id].last_worked_at or timezone.now(),
-    )
-
-    # Приоритет 4: особые блоки возвращаются в план не чаще раза в неделю.
-    recommendation_limit = timezone.now() - timedelta(days=7)
-    priority_four = [
-        lesson for lesson in lessons
-        if lesson.special_category in ("culture", "maps")
-        and (
-            not progress_rows.get(lesson.id)
-            or not progress_rows[lesson.id].last_recommended_at
-            or progress_rows[lesson.id].last_recommended_at <= recommendation_limit
-        )
-    ]
-    priority_four.sort(key=lambda lesson: (
-        progress_rows[lesson.id].last_recommended_at.timestamp()
-        if progress_rows.get(lesson.id) and progress_rows[lesson.id].last_recommended_at
-        else 0,
-        positions[lesson.id],
-    ))
+            progress_rows[lesson.id].last_worked_at or timezone.now(),
+            lesson.topic.order, lesson.order, lesson.id,
+        ))
 
     chosen = []
     chosen_ids = set()
-
-    def add_from(items, limit=None):
-        for lesson in items:
+    for group in (unfinished, with_errors, new_lessons):
+        for lesson in group:
             if lesson.id in chosen_ids:
                 continue
-            if limit is not None and len(chosen) >= limit:
-                break
             chosen.append(lesson)
             chosen_ids.add(lesson.id)
+            if len(chosen) >= count:
+                return chosen
+    return chosen
 
-    # Если есть давно не рекомендованный особый блок, оставляем ему
-    # одно место в плане, чтобы он не вытеснялся бесконечно обычными уроками.
-    special_lesson = next((lesson for lesson in priority_four), None)
-    regular_limit = count - 1 if special_lesson else count
-    # Сначала берём ближайший следующий урок, затем работу над ошибками
-    # и незавершённые уроки. Остальные последовательные уроки — для заполнения.
-    add_from(priority_one[:1], regular_limit)
-    add_from(priority_two, regular_limit)
-    add_from(priority_three, regular_limit)
 
-    if special_lesson and special_lesson.id not in chosen_ids and len(chosen) < count:
-        chosen.append(special_lesson)
-        chosen_ids.add(special_lesson.id)
+def _student_plan_settings(request):
+    """Настройки дневного плана в сессии, раздельно по предметам."""
+    settings_by_subject = request.session.get("daily_plan_settings", {})
+    return settings_by_subject if isinstance(settings_by_subject, dict) else {}
 
-    # Заполняем оставшиеся места последовательными уроками, затем прочими
-    # особыми блоками, если они ещё не попали в план.
-    add_from(priority_one[1:])
-    add_from(priority_two)
-    add_from(priority_three)
-    add_from(priority_four)
 
-    # Фиксируем рекомендацию для особых уроков, даже если они уже попали
-    # в план через один из первых трёх приоритетов.
-    recommended_at = timezone.now()
-    for lesson in chosen:
-        if lesson.special_category in ("culture", "maps"):
-            progress, _ = StudentLessonProgress.objects.get_or_create(
-                student=student, lesson=lesson
-            )
-            progress.last_recommended_at = recommended_at
-            progress.save(update_fields=["last_recommended_at"])
-
-    return chosen[:count]
+@require_POST
+def save_daily_plan_settings(request):
+    student = _current_student(request)
+    if not student:
+        return JsonResponse({"ok": False, "error": "Необходим вход."}, status=403)
+    try:
+        subject_id = int(request.POST.get("subject_id", ""))
+        theory_count = max(0, min(99, int(request.POST.get("theory_count", "0"))))
+        practice_count = max(0, min(99, int(request.POST.get("practice_count", "0"))))
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "error": "Некорректные настройки плана."}, status=400)
+    if not student.subjects.filter(id=subject_id).exists():
+        return JsonResponse({"ok": False, "error": "Предмет недоступен."}, status=404)
+    settings_by_subject = _student_plan_settings(request).copy()
+    settings_by_subject[str(subject_id)] = {
+        "theory": theory_count,
+        "practice": practice_count,
+    }
+    request.session["daily_plan_settings"] = settings_by_subject
+    request.session.modified = True
+    return JsonResponse({"ok": True})
 
 
 @require_POST
@@ -270,6 +242,7 @@ def cabinet(request):
     show_demo_welcome = bool(request.session.pop("show_demo_welcome", False))
 
     student_subjects = list(student.subjects.all())
+    plan_settings = _student_plan_settings(request)
 
     history = {
         "key": "history",
@@ -339,6 +312,9 @@ def cabinet(request):
     # строго в рамках текущего ученика и конкретного предмета.
     for tab in tabs:
         subject = next(item for item in student_subjects if item.id == tab["subject_id"])
+        saved_plan = plan_settings.get(str(subject.id), {})
+        tab["plan_theory"] = int(saved_plan.get("theory", tab["plan_theory"]))
+        tab["plan_practice"] = int(saved_plan.get("practice", tab["plan_practice"]))
         tab["assignments"] = (
             TeacherCollection.objects
             .filter(is_active=True, students=student)
@@ -375,90 +351,15 @@ def cabinet(request):
                 "correct": f"{best.correct_answers} верно",
             }
 
-    # Берём сохранённый выбор из рубрикатора и повторно проверяем,
-    # что все ID относятся к предметам текущего ученика.
-    selection = request.session.get("rubricator_selection", {})
-    selected_subject_ids = _session_ids(selection.get("subject_ids"))
-    allowed_subject_ids = {subject.id for subject in student_subjects}
-    selected_subject_ids &= allowed_subject_ids
-
-    selected_topic_ids = _session_ids(selection.get("topic_ids"))
-    selected_lesson_ids = _session_ids(selection.get("lesson_ids"))
-    selected_microtopic_ids = _session_ids(selection.get("microtopic_ids"))
-
+    # Кабинет формирует план независимо от ручного выбора на странице «Теория».
     plan_items_by_subject = {subject.id: [] for subject in student_subjects}
-
-    if selection.get("mode") == "chosen":
-        selected_topics = list(
-            Topic.objects
-            .filter(
-                id__in=selected_topic_ids,
-                subject_id__in=allowed_subject_ids,
-                subject__students=student,
-            )
-            .select_related("subject")
-            .order_by("subject_id", "order", "id")
-        )
-        valid_topic_ids = {topic.id for topic in selected_topics}
-
-        for topic in selected_topics:
-            plan_items_by_subject[topic.subject_id].append({
-                "title": topic.title,
-                "parent": "",
-            })
-
-        selected_lessons = list(
-            Lesson.objects
-            .filter(
-                id__in=selected_lesson_ids,
-                topic__subject_id__in=allowed_subject_ids,
-                topic__subject__students=student,
-            )
-            .exclude(topic_id__in=valid_topic_ids)
-            .select_related("topic", "topic__subject")
-            .order_by("topic__subject_id", "topic__order", "order", "id")
-        )
-        valid_lesson_ids = {lesson.id for lesson in selected_lessons}
-
-        for lesson in selected_lessons:
-            plan_items_by_subject[lesson.topic.subject_id].append({
-                "title": lesson.title,
-                "parent": lesson.topic.title,
-            })
-
-        selected_microtopics = (
-            MicroTopic.objects
-            .filter(
-                id__in=selected_microtopic_ids,
-                lesson__topic__subject_id__in=allowed_subject_ids,
-                lesson__topic__subject__students=student,
-            )
-            .exclude(lesson_id__in=valid_lesson_ids)
-            .exclude(lesson__topic_id__in=valid_topic_ids)
-            .select_related("lesson", "lesson__topic", "lesson__topic__subject")
-            .order_by(
-                "lesson__topic__subject_id",
-                "lesson__topic__order",
-                "lesson__order",
-                "order",
-                "id",
-            )
-        )
-
-        for microtopic in selected_microtopics:
-            subject_id = microtopic.lesson.topic.subject_id
-            plan_items_by_subject[subject_id].append({
-                "title": microtopic.title,
-                "parent": f"{microtopic.lesson.topic.title} / {microtopic.lesson.title}",
-            })
-
     daily_plan_subjects = []
     for subject in student_subjects:
         daily_plan_subjects.append({
             "id": subject.id,
             "title": subject.title,
             "items": plan_items_by_subject.get(subject.id, []),
-            "is_selected": subject.id in selected_subject_ids,
+            "is_selected": False,
         })
 
     context = {
@@ -471,8 +372,8 @@ def cabinet(request):
         "streak": 0,
         "tabs": tabs,
         "daily_plan_subjects": daily_plan_subjects,
-        "has_rubricator_selection": bool(selection),
-        "rubricator_selection_mode": selection.get("mode") or "auto",
+        "has_rubricator_selection": False,
+        "rubricator_selection_mode": "auto",
     }
 
     return render(request, "learning/cabinet.html", context)
@@ -605,7 +506,7 @@ def generate_daily_plan(request):
         return JsonResponse({"ok": False, "error": "Неизвестный режим подбора."}, status=400)
 
     lessons = generate_daily_lessons(
-        student, subject, request.POST.get("count", 3), mode=mode
+        student, subject, request.POST.get("count", 0), mode=mode
     )
     return JsonResponse({
         "ok": True,
