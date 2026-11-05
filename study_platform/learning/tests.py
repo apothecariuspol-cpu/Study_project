@@ -75,8 +75,9 @@ class DailyPlanGeneratorTests(TestCase):
             student=self.student, lesson=error_lesson,
             is_started=True, is_completed=True, error_count=3,
         )
+        unfinished_second = self.make_lesson("Ещё одна", 5)
         StudentLessonProgress.objects.create(
-            student=self.student, lesson=self.make_lesson("Ещё одна", 5),
+            student=self.student, lesson=unfinished_second,
             is_started=True, is_completed=False, error_count=1,
         )
         completed = Lesson.objects.get(title="Завершённая")
@@ -90,8 +91,8 @@ class DailyPlanGeneratorTests(TestCase):
                 self.student, self.subject, count=4, mode="random"
             )
 
-        self.assertEqual(result[0], unfinished)
-        self.assertIn(error_lesson, result[1:3])
+        self.assertEqual(set(result[:2]), {unfinished, unfinished_second})
+        self.assertEqual(result[2], error_lesson)
         self.assertEqual(result[3], new_lesson)
         self.assertNotIn(completed, result)
 
