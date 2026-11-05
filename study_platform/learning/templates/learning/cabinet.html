@@ -753,6 +753,23 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
  .plan-quote-button, .daily-plan-quote { left:37.9%; top:82.9%; }
 }
 
+
+.plan-progress { position:relative; width:242px; }
+.plan-progress[data-progress-kind="theory"] .plan-progress-base { flex-basis:195px; }
+.plan-progress[data-progress-kind="theory"] .plan-progress-change { flex-basis:26px; }
+.plan-progress[data-progress-kind="practice"] .plan-progress-base { flex-basis:175px; }
+.plan-progress[data-progress-kind="practice"] .plan-progress-change { flex-basis:67px; }
+.plan-progress-label {
+ display:flex; position:absolute; left:7px; top:0; bottom:0; align-items:center; justify-content:flex-start;
+ padding:0; color:#fff; font-size:13px; line-height:18px; pointer-events:none;
+}
+@media(max-width:600px) {
+ .plan-progress { width:100%; }
+ .plan-progress[data-progress-kind="theory"] .plan-progress-base { flex-basis:80%; }
+ .plan-progress[data-progress-kind="theory"] .plan-progress-change { flex-basis:11%; }
+ .plan-progress[data-progress-kind="practice"] .plan-progress-base { flex-basis:72%; }
+ .plan-progress[data-progress-kind="practice"] .plan-progress-change { flex-basis:28%; }
+}
 </style>
 </head>
 
