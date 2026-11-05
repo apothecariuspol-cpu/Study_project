@@ -97,7 +97,7 @@ def generate_daily_lessons(student, subject, count=3, mode="auto"):
             new_lessons.append(lesson)
 
     if mode == "random":
-        chooser = lambda items: random.sample(items, len(items))
+        chooser = lambda items: random.sample(items, len(items)) if len(items) > 1 else items
         unfinished = chooser(unfinished)
         with_errors = chooser(with_errors)
         new_lessons = chooser(new_lessons)
@@ -450,7 +450,7 @@ def rubricator(request):
                     "microtopic_ids": [str(item) for item in valid_microtopic_ids],
                 }
                 request.session.modified = True
-                messages.success(request, "Выбор сохранён. Он появится в дневном плане кабинета.")
+                messages.success(request, "Выбор сохранён для ручного запуска.")
 
         elif action == "random":
             request.session["rubricator_selection"] = {
@@ -490,14 +490,7 @@ def rubricator(request):
         "selected_topic_ids": selected_topic_ids,
         "selected_lesson_ids": selected_lesson_ids,
         "selected_microtopic_ids": selected_microtopic_ids,
-        "plan_theory_counts": {
-            str(subject.id): int(
-                _student_plan_settings(request).get(str(subject.id), {}).get(
-                    "theory", 3 if "истор" in subject.title.lower() else 2 if "общ" in subject.title.lower() else 3
-                )
-            )
-            for subject in subjects
-        },
+        "plan_theory_counts": plan_theory_counts,
         "generate_plan_url": "generate_daily_plan",
     }
     return render(request, "learning/rubricator.html", context)
