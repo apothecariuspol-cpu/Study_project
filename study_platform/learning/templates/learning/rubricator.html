@@ -11,42 +11,99 @@
 <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,200;0,400;0,500;0,600;0,700;1,200&display=swap" rel="stylesheet">
 
 <style>
+/* Локальные файлы шрифта из learning/static/fonts — без обращения к отсутствующим variable-файлам. */
 @font-face {
     font-family: "Jost Local";
-    src: local("Jost"),
-         url("{% static 'fonts/Jost-VariableFont_wght.ttf' %}") format("truetype");
-    font-weight: 100 900;
+    src: url("{% static 'fonts/Jost-ExtraLight.ttf' %}") format("truetype");
+    font-weight: 200;
     font-style: normal;
     font-display: swap;
 }
-
 @font-face {
     font-family: "Jost Local";
-    src: local("Jost Italic"),
-         url("{% static 'fonts/Jost-Italic-VariableFont_wght.ttf' %}") format("truetype");
-    font-weight: 100 900;
+    src: url("{% static 'fonts/Jost-Regular.ttf' %}") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Medium.ttf' %}") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-SemiBold.ttf' %}") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Bold.ttf' %}") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Black.ttf' %}") format("truetype");
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-ExtraLightItalic.ttf' %}") format("truetype");
+    font-weight: 200;
     font-style: italic;
     font-display: swap;
 }
-
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Italic.ttf' %}") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-MediumItalic.ttf' %}") format("truetype");
+    font-weight: 500;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-SemiBoldItalic.ttf' %}") format("truetype");
+    font-weight: 600;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-BoldItalic.ttf' %}") format("truetype");
+    font-weight: 700;
+    font-style: italic;
+    font-display: swap;
+}
 @font-face {
     font-family: "KyivType Serif";
-    src: local("KyivType Serif Heavy 2"), local("KyivTypeSerif-Heavy2"),
-         url("{% static 'fonts/KyivTypeSerif-Heavy2.otf' %}") format("opentype");
+    src: url("{% static 'fonts/KyivTypeSerif-Heavy2.otf' %}") format("opentype");
     font-weight: 900;
     font-display: swap;
 }
-
 @font-face {
     font-family: "KyivType Serif";
-    src: local("KyivType Serif Bold"), local("KyivTypeSerif-Bold"),
-         url("{% static 'fonts/KyivTypeSerif-Bold.otf' %}") format("opentype");
+    src: url("{% static 'fonts/KyivTypeSerif-Bold.otf' %}") format("opentype");
     font-weight: 700;
     font-display: swap;
 }
 
 :root {
-    --font: "Jost Local", "Jost", Arial, sans-serif;
+    --font-text: "Jost Local", "Jost", Arial, sans-serif;
     --font-display: "KyivType Serif", Georgia, serif;
     --black: #080808;
     --gray: #9E9E9E;
@@ -70,7 +127,7 @@ body {
     flex-direction: column;
     background: #fff;
     color: var(--black);
-    font-family: var(--font);
+    font-family: var(--font-text);
 }
 
 a {
@@ -173,7 +230,7 @@ button {
 .mood {
     margin: .375rem 0 0;
     color: var(--gray);
-    font-family: var(--font);
+    font-family: var(--font-text);
     font-size: 1.4rem;
     font-weight: 400;
     line-height: 1.4;
@@ -593,7 +650,7 @@ footer {
     text-underline-offset: .25rem;
 }
 
-/* Окно «План на день» по макету */
+/* Окно «План на день» — визуально согласовано с окном в «Кабинете». */
 .plan-modal[hidden] { display: none !important; }
 .plan-modal {
     position: fixed;
@@ -603,8 +660,8 @@ footer {
     justify-content: center;
     align-items: center;
     overflow-y: auto;
-    padding: 2rem 1rem;
-    background: rgba(0, 0, 0, .38);
+    padding: .5rem;
+    background: rgba(0, 0, 0, .16);
 }
 .plan-modal-backdrop {
     position: fixed;
@@ -614,94 +671,67 @@ footer {
 .plan-modal-window {
     position: relative;
     z-index: 1;
-    width: min(52rem, calc(100% - 2rem));
-    max-height: calc(100vh - 5rem);
+    display: flex;
+    flex-direction: column;
+    width: min(52rem, calc(100vw - 1rem));
+    min-height: min(48rem, calc(100dvh - 1rem));
+    max-height: calc(100dvh - 1rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: #080808 transparent;
     margin: auto;
-    padding: 2.1rem 2.35rem 1.9rem;
+    padding: 4.25rem 4.9rem 5.8rem;
+    border: 0;
+    border-radius: .35rem;
     background: #fff;
-    border: 1px solid #080808;
-    border-radius: 3px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, .12);
+    color: #080808;
+    box-shadow: 0 .15rem .8rem rgba(0,0,0,.08);
 }
-.plan-modal-window::-webkit-scrollbar {
-    width: 3px;
-}
-.plan-modal-window::-webkit-scrollbar-track {
-    background: transparent;
-}
-.plan-modal-window::-webkit-scrollbar-thumb {
-    background: #080808;
-    border-radius: 0;
-}
-
+.plan-modal-window::-webkit-scrollbar { width: 3px; }
+.plan-modal-window::-webkit-scrollbar-thumb { background: #080808; }
 .plan-modal-title {
-    margin: 0 0 2rem;
-    font-family: var(--font);
-    font-size: 1.95rem;
+    margin: 0 0 2.4rem;
+    font-family: var(--font-text);
+    font-size: 1.75rem;
     font-weight: 400;
     line-height: 1.2;
     text-align: left;
 }
-.plan-quote-button {
-    display: inline-block;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: #080808;
-    font: inherit;
-    font-size: 1.05rem;
-    line-height: 1.3;
-    text-align: left;
-    cursor: pointer;
-}
-.plan-quote-button:hover {
-    text-decoration: underline;
-    text-underline-offset: .2em;
-}
-.plan-quote-button:focus-visible {
-    outline: 2px solid #080808;
-    outline-offset: 4px;
-}
-.plan-quote-author {
-    margin: .15rem 0 0;
-    color: var(--gray);
-    font-size: .95rem;
-}
 .plan-subjects {
     display: flex;
-    flex-wrap: wrap;
-    gap: .8rem 2.5rem;
-    margin-top: 2.1rem;
-    font-size: 13px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .45rem;
+    margin: 0 0 2.5rem;
+    font-size: 1.65rem;
+    line-height: 1.15;
 }
 .plan-subject {
     display: inline-flex;
     align-items: center;
-    gap: .5rem;
-    font-size: 13px;
+    gap: .45rem;
+    font-size: inherit;
 }
 .plan-subject input {
-    width: .8rem;
-    height: .8rem;
+    width: 1.35rem;
+    height: 1.35rem;
     margin: 0;
     accent-color: #080808;
 }
 .plan-topics {
     display: grid;
-    gap: .7rem;
-    margin-top: 2.8rem;
+    gap: .75rem;
+    margin: 0 0 1.65rem;
+    font-size: .95rem;
+    line-height: 1.25;
 }
 .plan-topic {
     display: grid;
     grid-template-columns: 7rem minmax(0, 1fr);
     align-items: center;
     column-gap: 1.8rem;
-    font-size: 1.3rem;
+    font-size: .95rem;
     line-height: 1.25;
 }
 .plan-status {
@@ -709,11 +739,11 @@ footer {
     justify-content: center;
     align-items: center;
     min-width: 7rem;
-    min-height: 2rem;
+    min-height: 1.7rem;
     padding: .1rem .45rem;
     border: 1px solid #080808;
-    border-radius: .45rem;
-    font-size: .85rem;
+    border-radius: .35rem;
+    font-size: .72rem;
     line-height: 1;
     letter-spacing: .06em;
 }
@@ -724,22 +754,18 @@ footer {
     color: #888;
     font-size: .78em;
 }
-.plan-preview-empty {
-    margin: 0;
-    color: #888;
-    font-size: .9rem;
-}
+.plan-preview-empty { margin: 0; color: #888; font-size: .9rem; }
 .plan-task-list {
     display: grid;
-    gap: .75rem;
-    margin-top: 2.8rem;
+    gap: .65rem;
+    margin: 0 0 3.5rem;
 }
 .plan-task {
-    display: grid;
-    grid-template-columns: 3.4rem minmax(0, 1fr) auto;
+    display: flex;
     align-items: center;
-    gap: 1rem;
-    font-size: 1.25rem;
+    justify-content: space-between;
+    gap: .6rem;
+    font-size: .95rem;
     line-height: 1.2;
 }
 .plan-task-count {
@@ -747,9 +773,9 @@ footer {
     justify-content: center;
     align-items: center;
     width: 2.9rem;
-    height: 1.95rem;
+    height: 1.45rem;
     border: 1px solid #080808;
-    border-radius: .45rem;
+    border-radius: .25rem;
     font-size: 1rem;
 }
 .plan-task-controls {
@@ -762,26 +788,24 @@ footer {
     padding: 0;
     border: 0;
     background: none;
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     font-weight: 600;
     line-height: 1;
 }
-.plan-changes {
-    margin: 2.8rem 0 0 .3rem;
-}
+.plan-changes { margin-top: auto; }
 .plan-changes-title {
-    margin: 0 0 1.3rem;
-    font-size: 1.25rem;
+    margin: 0 0 .65rem;
+    font-size: .95rem;
 }
 .plan-progress {
     display: flex;
     position: relative;
     width: 100%;
-    height: 1.45rem;
-    margin-top: .45rem;
-    background: #d8d8d8;
+    height: 1.15rem;
+    margin-top: .35rem;
+    background: #d9d9d9;
     overflow: hidden;
-    font-size: .75rem;
+    font-size: .7rem;
     line-height: 1;
 }
 .plan-progress-base {
@@ -801,7 +825,7 @@ footer {
     align-items: center;
     flex: 0 0 var(--change-width, 2%);
     min-width: 2.7rem;
-    background: #b9ffb7;
+    background: #a7f39a;
     border: 1px solid #080808;
 }
 .plan-progress-label {
@@ -809,21 +833,31 @@ footer {
     align-items: center;
     justify-content: flex-end;
     flex: 1;
-    padding-right: 1.4rem;
+    padding-right: .45rem;
     color: #080808;
+    font-size: .65rem;
+}
+.plan-quote-button {
+    display: inline-block;
+    align-self: flex-start;
+    margin: 5.9rem 0 0;
+    padding: 0 0 .15rem;
+    border: 0;
+    border-bottom: 1px solid #080808;
+    background: transparent;
+    color: #080808;
+    font: inherit;
+    font-size: .95rem;
+    line-height: 1.2;
+    text-align: left;
+    cursor: pointer;
+}
+.plan-quote-button:hover { text-decoration: none; }
+.plan-quote-author {
+    margin: .15rem 0 0;
+    color: var(--gray);
     font-size: .85rem;
 }
-.plan-modal-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin: 2.5rem .2rem 0;
-}
-.plan-modal-actions .action-button {
-    width: 100%;
-    min-height: 3rem;
-}
-
 /* Мобильная версия */
 @media (max-width: 700px) {
     html {
@@ -916,23 +950,23 @@ footer {
     }
 
     .mood { font-size: 1.15rem; }
-    .plan-modal { align-items: center; padding: .75rem .5rem; }
-    .plan-modal-window { width: min(52rem, calc(100% - 1rem)); max-height: calc(100vh - 1.5rem); padding: 1.5rem 1rem; }
-    .plan-modal-title { font-size: 1.5rem; margin-bottom: 1.25rem; text-align: left; }
-    .plan-quote-button { font-size: .9rem; }
+    .plan-modal { align-items: center; padding: .5rem; }
+    .plan-modal-window { width: min(52rem, calc(100vw - 1rem)); min-height: min(48rem, calc(100dvh - 1rem)); max-height: calc(100dvh - 1rem); padding: 2rem 1.25rem 2.5rem; }
+    .plan-modal-title { font-size: 1.5rem; margin-bottom: 1.5rem; text-align: left; }
+    .plan-quote-button { margin-top: 3rem; font-size: .9rem; }
     .plan-quote-author { font-size: .8rem; }
-    .plan-subjects { margin-top: 1.7rem; gap: .8rem 1.5rem; font-size: 13px; }
-    .plan-subject, .plan-subject input { font-size: 13px; }
-    .plan-subject input { width: .8rem; height: .8rem; }
-    .plan-topics { margin-top: 2.2rem; gap: .7rem; }
+    .plan-subjects { margin-bottom: 1.7rem; gap: .8rem; font-size: 1.15rem; }
+    .plan-subject { font-size: inherit; }
+    .plan-subject input { width: 1rem; height: 1rem; }
+    .plan-topics { margin-bottom: 1.5rem; gap: .7rem; }
     .plan-topic { grid-template-columns: 5.8rem minmax(0, 1fr); column-gap: .75rem; font-size: 1rem; }
     .plan-status { min-width: 5.8rem; min-height: 1.7rem; font-size: .7rem; }
-    .plan-task-list { margin-top: 2.2rem; gap: .7rem; }
+    .plan-task-list { margin-bottom: 2.2rem; gap: .7rem; }
     .plan-task { grid-template-columns: 2.5rem minmax(0, 1fr) auto; gap: .5rem; font-size: 1rem; }
     .plan-task-count { width: 2.3rem; height: 1.7rem; font-size: .85rem; }
     .plan-task-controls { gap: .3rem; }
     .plan-task-controls button { font-size: 1.2rem; }
-    .plan-changes { margin-top: 2.2rem; }
+    .plan-changes { margin-top: auto; }
     .plan-changes-title { font-size: 1.05rem; margin-bottom: .8rem; }
     .plan-progress { height: 1.2rem; }
     .plan-progress-label { font-size: .75rem; padding-right: .7rem; }
@@ -986,7 +1020,7 @@ footer {
                         {% if subject.id|stringformat:"s" in selected_subject_ids %}checked{% elif not has_saved_selection and forloop.first %}checked{% endif %}
                     >
                     <span class="check-box"></span>
-                    {{ subject.title }}
+                    {% if subject.title == "Обществознание" %}Общество{% else %}{{ subject.title }}{% endif %}
                 </label>
                 {% empty %}
                 <p class="empty-subject">
@@ -1173,13 +1207,8 @@ footer {
 <div class="plan-modal" id="plan-modal" hidden>
     <div class="plan-modal-backdrop" data-close-plan></div>
     <section class="plan-modal-window" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title" tabindex="-1">
-        <div style="background:red;color:white;padding:10px;font-size:20px;margin-bottom:12px;">
-            ПРОВЕРКА НОВОГО ШАБЛОНА
-        </div>
+        
         <h2 class="plan-modal-title" id="plan-modal-title">План на день</h2>
-        <button class="plan-quote-button" type="submit" form="rubricator-form" name="action" value="choose" id="study-selected">Oh shit! Here we go again.</button>
-        <p class="plan-quote-author">Джейсон Стетхем</p>
-
         <div class="plan-subjects" id="preview-subjects" aria-label="Выбранные предметы"></div>
 
         <div class="plan-topics" id="preview-topics" aria-live="polite">
@@ -1208,6 +1237,8 @@ footer {
             </div>
         </div>
 
+        <button class="plan-quote-button" type="submit" form="rubricator-form" name="action" value="choose" id="study-selected">Oh shit! Here we go again.</button>
+        <p class="plan-quote-author">Джейсон Стетхем</p>
     </section>
 </div>
 

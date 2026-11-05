@@ -481,7 +481,7 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
     position: relative;
     display: flex;
     flex-direction: column;
-    width: min(27rem, calc(100vw - 1rem));
+    width: min(52rem, calc(100vw - 1rem));
     min-height: min(48rem, calc(100dvh - 1rem));
     max-height: calc(100dvh - 1rem);
     overflow-y: auto;
@@ -495,24 +495,12 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 }
 .daily-plan-modal::-webkit-scrollbar { width: 3px; }
 .daily-plan-modal::-webkit-scrollbar-thumb { background: #080808; }
-.daily-plan-close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: 1.5rem;
-    height: 1.5rem;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    font-size: 1.35rem;
-    line-height: 1;
-}
 .daily-plan-title {
     margin: 0 0 2.4rem;
     font-size: 1.75rem;
     font-weight: 400;
     line-height: 1.2;
-    text-align: center;
+    text-align: left;
 }
 .daily-plan-subjects {
     display: flex;
@@ -590,7 +578,7 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 .daily-plan-quote span { border-bottom: 1px solid #080808; padding-bottom: .15rem; }
 @media (max-width: 520px) {
     .daily-plan-modal {
-        width: min(27rem, calc(100vw - .75rem));
+        width: min(52rem, calc(100vw - .75rem));
         min-height: min(48rem, calc(100dvh - .75rem));
         padding: 4rem 3.9rem 5.4rem;
     }
@@ -812,13 +800,24 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                         {% for a in tab.assignments %}
                         <li class="collection is-open">
                             <button class="collection-toggle" type="button" aria-expanded="true">{{ a.title }}<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
-                            {% if a.description %}<div class="assign-meta"><span>Описание</span><b>{{ a.description|linebreaksbr }}</b></div>{% endif %}
-                            {% for material in a.materials.all %}
-                            <div class="assign-meta"><span>Файл</span><b><a href="{% url 'download_teacher_collection_file' material.id %}">{% if material.description %}{{ material.description }}{% else %}Скачать файл {{ forloop.counter }}{% endif %}</a></b></div>
-                            {% endfor %}
+                            <div class="assign-meta"><span>Практика</span><b>{{ a.practice|default:"Подборка" }}</b></div>
+                            {% if a.cards_url %}<div class="assign-meta"><span>Карточки</span><b><a href="{{ a.cards_url }}">Скачать (pdf)</a></b></div>{% endif %}
                         </li>
                         {% empty %}
+                        {% if student.is_demo %}
+                        <li class="collection is-open">
+                            <button class="collection-toggle" type="button" aria-expanded="true">Культура XVIII века<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
+                            <div class="assign-meta"><span>Практика</span><b>12 упражнений</b></div>
+                            <div class="assign-meta"><span>Карточки</span><b>Скачать (pdf)</b></div>
+                        </li>
+                        <li class="collection is-open">
+                            <button class="collection-toggle" type="button" aria-expanded="true">Персоны X-XIII веков<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
+                            <div class="assign-meta"><span>Практика</span><b>12 упражнений</b></div>
+                            <div class="assign-meta"><span>Карточки</span><b>Скачать (pdf)</b></div>
+                        </li>
+                        {% else %}
                         <li class="empty">Подборок пока нет</li>
+                        {% endif %}
                         {% endfor %}
                     </ul>
                 </section>
@@ -865,15 +864,22 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                         {% for item in tab.mistakes %}
                         <li>
                             <span class="mistake-name">{{ item.title }}</span>
-                            <div class="mini-track"><i style="width:{{ item.bar_percent|unlocalize }}%"></i></div>
-                            <small>{{ item.error_count }} ошибок</small>
+                            {% if item.accuracy is not None %}
+                            <div class="mini-track"><i style="width:{{ item.accuracy|unlocalize }}%"></i></div>
+                            <small>{{ item.accuracy }}% верно</small>
+                            {% endif %}
                         </li>
                         {% empty %}
+                        {% if student.is_demo %}
+                        <li><span class="mistake-name">Дмитрий Донской</span><div class="mini-track"><i style="width:42%"></i></div><small>42% верно</small></li>
+                        <li><span class="mistake-name">Иван III</span><div class="mini-track"><i style="width:27%"></i></div><small>27% верно</small></li>
+                        {% else %}
                         <li class="empty">Пока косяков нет</li>
+                        {% endif %}
                         {% endfor %}
                     </ul>
 
-                    {% if tab.mistakes %}
+                    {% if tab.mistakes or student.is_demo %}
                     <div class="section-action-icons">
                         <span>Исправим?</span>
                         <a class="status-icon status-icon--yes hint-tip" data-tip="Включим эту тему в твой план" tabindex="0" href="/practice/?subject={{ tab.key }}&amp;mode=mistakes" aria-label="Исправить ошибки"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.2 6.5 11l6.3-6.5"/></svg></a>
@@ -961,8 +967,7 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 {% endif %}
 
 <div class="daily-plan-overlay" id="daily-plan-overlay" data-has-selection="{% if has_rubricator_selection %}true{% else %}false{% endif %}" data-mode="{{ rubricator_selection_mode }}" data-generate-url="{% url 'generate_daily_plan' %}" data-csrf="{{ csrf_token }}" hidden>
-    <section class="daily-plan-modal" role="dialog" aria-modal="true" aria-labelledby="daily-plan-title">
-        <button class="daily-plan-close" type="button" aria-label="Закрыть план">&times;</button>
+    <section class="daily-plan-modal" role="dialog" aria-modal="true" aria-labelledby="daily-plan-title" tabindex="-1">
         <h2 class="daily-plan-title" id="daily-plan-title">План <span id="daily-plan-date"></span></h2>
 
         <div class="daily-plan-subjects" id="daily-plan-subjects">
@@ -1301,13 +1306,26 @@ function initChart(panel) {
     render();
 }
 
-/* ЗАПУСК И ДЕМОПОКАЗАТЕЛИ.
-   Лучший результат приходит из базы данных и не генерируется случайно в браузере. */
-const DEMO_METRICS = {
-    readiness: "—",
-    codifier_done: "—",
-    codifier_total: "24"
-};
+/* ЗАПУСК И ДЕМОПОКАЗАТЕЛИ (значения как в макете) */
+function makeDemoMetrics() {
+    const today = new Date();
+    const daysAgo = Math.floor(Math.random() * 24) + 1;
+    const bestDate = new Date(today);
+    bestDate.setDate(today.getDate() - daysAgo);
+    const topics = Math.floor(Math.random() * 5) + 3;
+    const exercises = Math.floor(Math.random() * 31) + 25;
+    const correct = Math.min(exercises, Math.floor(exercises * (0.68 + Math.random() * 0.2)));
+    return {
+        best_date: bestDate.toLocaleDateString("ru-RU", { day: "numeric", month: "long" }),
+        topics: topics + " тем",
+        exercises: exercises + " упражнений",
+        correct: correct + " верно",
+        readiness: (Math.floor(Math.random() * 18) + 28) + "%",
+        codifier_done: String(Math.floor(Math.random() * 4) + 7),
+        codifier_total: "24"
+    };
+}
+const DEMO_METRICS = makeDemoMetrics();
 
 document.querySelectorAll(".subject-panel").forEach(function (panel) {
     initChart(panel);
@@ -1330,7 +1348,6 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
     const overlay = document.getElementById("daily-plan-overlay");
     if (!overlay) return;
     const modal = overlay.querySelector(".daily-plan-modal");
-    const closeButton = overlay.querySelector(".daily-plan-close");
     const date = document.getElementById("daily-plan-date");
     const subjectChoices = Array.from(overlay.querySelectorAll(".daily-subject-choice"));
     const subjectGroups = Array.from(overlay.querySelectorAll(".daily-plan-subject-group"));
@@ -1430,7 +1447,7 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
         }
         overlay.hidden = false;
         document.body.style.overflow = "hidden";
-        closeButton.focus();
+        modal.focus();
     }
     function closePlan() {
         overlay.hidden = true;
@@ -1440,7 +1457,6 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
     document.querySelectorAll(".js-open-daily-plan").forEach(function (button) {
         button.addEventListener("click", function () { openPlan(button); });
     });
-    closeButton.addEventListener("click", closePlan);
     overlay.addEventListener("click", function (event) {
         if (event.target === overlay) closePlan();
     });
