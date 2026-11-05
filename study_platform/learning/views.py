@@ -465,6 +465,15 @@ def rubricator(request):
 
         return redirect("rubricator")
 
+    plan_theory_counts = {
+        str(subject.id): int(
+            _student_plan_settings(request).get(str(subject.id), {}).get(
+                "theory", 3 if "истор" in subject.title.lower() else 2 if "общ" in subject.title.lower() else 3
+            )
+        )
+        for subject in subjects
+    }
+
     selection = request.session.get("rubricator_selection", {})
     has_saved_selection = bool(selection)
     selected_subject_ids = [str(item) for item in selection.get("subject_ids", [])]
