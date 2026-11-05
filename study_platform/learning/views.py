@@ -64,7 +64,7 @@ def _ordered_student_lessons(student, subject):
     )
 
 
-def generate_daily_lessons(student, subject, count=3, mode="auto"):
+def generate_daily_lessons(student, subject, count=0, mode="auto"):
     """Подбирает уроки: незавершённые, затем с ошибками, затем новые."""
     try:
         count = max(0, min(99, int(count)))
