@@ -490,7 +490,6 @@ def rubricator(request):
         "selected_lesson_ids": selected_lesson_ids,
         "selected_microtopic_ids": selected_microtopic_ids,
         "plan_theory_counts": plan_theory_counts,
-        "generate_plan_url": "generate_daily_plan",
     }
     return render(request, "learning/rubricator.html", context)
 
