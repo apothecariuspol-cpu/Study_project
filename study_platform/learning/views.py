@@ -9,7 +9,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.http import JsonResponse, FileResponse, Http404
 from django.utils import timezone
-from datetime import timedelta
 from django.views.decorators.http import require_POST
 
 from .models import Subject, Topic, Lesson, MicroTopic, Student, StudentAccess, StudentLessonProgress, StudentBestResult, TeacherCollectionFile, TeacherCollection
