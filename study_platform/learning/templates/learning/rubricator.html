@@ -1006,7 +1006,7 @@ footer {
             </p>
         </header>
 
-        <form id="rubricator-form" method="post">
+        <form id="rubricator-form" method="post" data-generate-url="{% url 'generate_daily_plan' %}">
             {% csrf_token %}
 
             <div class="subjects" aria-label="Выбор предметов">
@@ -1201,6 +1201,7 @@ footer {
             {% endfor %}
 
         </form>
+        {{ plan_theory_counts|json_script:"plan-theory-counts" }}
     </main>
 </div>
 
@@ -1308,7 +1309,7 @@ footer {
         previewTopics.appendChild(row);
     }
 
-    function renderPlanPreview(mode) {
+    async function renderPlanPreview(mode) {
         if (!previewSubjects || !previewTopics) return;
         previewSubjects.replaceChildren();
         previewTopics.replaceChildren();
@@ -1321,7 +1322,10 @@ footer {
             const panel = Array.from(form.querySelectorAll(".subject-panel")).find(function (item) {
                 return item.dataset.subjectId === subjectInput.value;
             });
-            if (!panel || mode === "random") return;
+            if (!panel) return;
+            if (mode === "random") {
+                return;
+            }
 
             panel.querySelectorAll(".topic-item").forEach(function (topic) {
                 const topicInput = topic.querySelector(":scope > .topic-heading .topic-master");
@@ -1358,10 +1362,58 @@ footer {
         });
 
         if (mode === "random") {
-            const note = document.createElement("p");
-            note.className = "plan-preview-empty";
-            note.textContent = "Случайный подбор будет сформирован после запуска.";
-            previewTopics.appendChild(note);
+            const countsNode = document.getElementById("plan-theory-counts");
+            const counts = countsNode ? JSON.parse(countsNode.textContent || "{}") : {};
+            const csrf = form.querySelector('[name="csrfmiddlewaretoken"]')?.value || "";
+            const requests = checkedSubjects.map(async function (subjectInput) {
+                const panel = Array.from(form.querySelectorAll(".subject-panel")).find(function (item) {
+                    return item.dataset.subjectId === subjectInput.value;
+                });
+                const subjectLabel = subjectInput.closest(".subject-check");
+                const subjectTitle = subjectLabel ? subjectLabel.textContent.trim() : "Предмет";
+                if (!panel) return;
+                const body = new URLSearchParams({
+                    subject_id: subjectInput.value,
+                    count: String(counts[subjectInput.value] ?? 0),
+                    mode: "random"
+                });
+                const response = await fetch(form.dataset.generateUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                        "X-CSRFToken": csrf,
+                        "X-Requested-With": "XMLHttpRequest"
+                    },
+                    body: body.toString()
+                });
+                const data = await response.json();
+                if (!response.ok || !data.ok) {
+                    throw new Error(data.error || "Не удалось подобрать темы.");
+                }
+                data.items.forEach(function (item) {
+                    addPreviewTopic(item.title, item.parent);
+                });
+            });
+            const loading = document.createElement("p");
+            loading.className = "plan-preview-empty";
+            loading.textContent = "Подбираем темы…";
+            previewTopics.appendChild(loading);
+            try {
+                await Promise.all(requests);
+                if (loading.isConnected) loading.remove();
+                if (!previewTopics.children.length) {
+                    const empty = document.createElement("p");
+                    empty.className = "plan-preview-empty";
+                    empty.textContent = "Нет доступных опубликованных тем для подбора.";
+                    previewTopics.appendChild(empty);
+                }
+            } catch (error) {
+                previewTopics.replaceChildren();
+                const failed = document.createElement("p");
+                failed.className = "plan-preview-empty";
+                failed.textContent = "Не удалось сформировать случайный список. Попробуй ещё раз.";
+                previewTopics.appendChild(failed);
+            }
         } else if (!previewTopics.children.length) {
             const note = document.createElement("p");
             note.className = "plan-preview-empty";
@@ -1408,7 +1460,7 @@ footer {
         updateExpectedChanges();
         openPlan();
     });
-    document.getElementById("random-plan")?.addEventListener("click", function () {
+    document.getElementById("random-plan")?.addEventListener("click", async function () {
         if (!form.querySelector(".subject-filter:checked")) {
             alert("Сначала выбери предмет.");
             return;
@@ -1416,9 +1468,10 @@ footer {
         if (studySelectedButton) {
             studySelectedButton.value = "random";
         }
-        renderPlanPreview("random");
-        updateExpectedChanges();
+        previewTopics.replaceChildren();
         openPlan();
+        await renderPlanPreview("random");
+        updateExpectedChanges();
     });
     planModal?.querySelectorAll("[data-close-plan]").forEach(function (element) {
         element.addEventListener("click", function (event) {
