@@ -62,6 +62,44 @@ class DailyPlanGeneratorTests(TestCase):
         sample.assert_called_once()
         self.assertEqual(result, expected)
 
+    def test_random_mode_keeps_unfinished_error_new_priority_groups(self):
+        unfinished = self.make_lesson("Незавершённая", 1)
+        error_lesson = self.make_lesson("С ошибками", 2)
+        new_lesson = self.make_lesson("Новая", 3)
+        self.make_lesson("Завершённая", 4)
+        StudentLessonProgress.objects.create(
+            student=self.student, lesson=unfinished,
+            is_started=True, is_completed=False, error_count=0,
+        )
+        StudentLessonProgress.objects.create(
+            student=self.student, lesson=error_lesson,
+            is_started=True, is_completed=True, error_count=3,
+        )
+        StudentLessonProgress.objects.create(
+            student=self.student, lesson=self.make_lesson("Ещё одна", 5),
+            is_started=True, is_completed=False, error_count=1,
+        )
+        completed = Lesson.objects.get(title="Завершённая")
+        StudentLessonProgress.objects.create(
+            student=self.student, lesson=completed,
+            is_started=True, is_completed=True, error_count=0,
+        )
+
+        with patch("learning.views.random.sample", side_effect=lambda items, size: list(reversed(items))):
+            result = generate_daily_lessons(
+                self.student, self.subject, count=3, mode="random"
+            )
+
+        self.assertEqual(result[0], unfinished)
+        self.assertIn(error_lesson, result[1:])
+        self.assertIn(new_lesson, result[2:])
+        self.assertNotIn(completed, result)
+
+    def test_generator_returns_fewer_than_requested_when_not_enough_candidates(self):
+        first = self.make_lesson("Новая тема", 1)
+        result = generate_daily_lessons(self.student, self.subject, count=5)
+        self.assertEqual(result, [first])
+
     def test_random_mode_only_uses_published_lessons(self):
         published = [self.make_lesson("Опубликованный %s" % number, number) for number in range(1, 4)]
         self.make_lesson("Черновик", 4, is_published=False)
