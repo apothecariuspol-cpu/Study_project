@@ -1209,7 +1209,7 @@ footer {
     <div class="plan-modal-backdrop" data-close-plan></div>
     <section class="plan-modal-window" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title" tabindex="-1">
         
-        <h2 class="plan-modal-title" id="plan-modal-title">План на день</h2>
+        <h2 class="plan-modal-title" id="plan-modal-title">План <span id="plan-modal-date"></span></h2>
         <div class="plan-subjects" id="preview-subjects" aria-label="Выбранные предметы"></div>
 
         <div class="plan-topics" id="preview-topics" aria-live="polite">
@@ -1218,10 +1218,10 @@ footer {
 
         <div class="plan-task-list" aria-label="Количество заданий">
             <div class="plan-task"><span class="plan-task-count" data-count="2">2</span><span>Карты</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить карты">+</button><button type="button" data-step="-1" aria-label="Убрать карты">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="4">4</span><span>Сопоставление</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания на сопоставление">+</button><button type="button" data-step="-1" aria-label="Убрать задания на сопоставление">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="10">10</span><span>Выбор одного</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания с выбором">+</button><button type="button" data-step="-1" aria-label="Убрать задания с выбором">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="5">5</span><span>Краткий ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить краткие ответы">+</button><button type="button" data-step="-1" aria-label="Убрать краткие ответы">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="2">2</span><span>Развернутый ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить развернутые ответы">+</button><button type="button" data-step="-1" aria-label="Убрать развернутые ответы">-</button></span></div>
+            <div class="plan-task"><span class="plan-task-count" data-count="5">5</span><span>Сопоставление</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания на сопоставление">+</button><button type="button" data-step="-1" aria-label="Убрать задания на сопоставление">-</button></span></div>
+            <div class="plan-task"><span class="plan-task-count" data-count="7">7</span><span>Выбор одного</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания с выбором">+</button><button type="button" data-step="-1" aria-label="Убрать задания с выбором">-</button></span></div>
+            <div class="plan-task"><span class="plan-task-count" data-count="9">9</span><span>Краткий ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить краткие ответы">+</button><button type="button" data-step="-1" aria-label="Убрать краткие ответы">-</button></span></div>
+            <div class="plan-task"><span class="plan-task-count" data-count="1">1</span><span>Развернутый ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить развернутые ответы">+</button><button type="button" data-step="-1" aria-label="Убрать развернутые ответы">-</button></span></div>
         </div>
 
         <div class="plan-changes">
@@ -1275,6 +1275,12 @@ footer {
     const planModal = document.getElementById("plan-modal");
     const previewSubjects = document.getElementById("preview-subjects");
     const previewTopics = document.getElementById("preview-topics");
+    const planModalDate = document.getElementById("plan-modal-date");
+    if (planModalDate) {
+        planModalDate.textContent = new Date().toLocaleDateString("ru-RU", {
+            day: "numeric", month: "long"
+        });
+    }
 
     function addPreviewSubject(title) {
         const label = document.createElement("label");
