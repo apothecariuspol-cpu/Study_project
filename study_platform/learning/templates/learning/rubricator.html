@@ -1526,7 +1526,16 @@ footer {
         if (!planModal) return;
         const selectedUnits = countSelectedUnits();
         const randomMode = studySelectedButton && studySelectedButton.value === "random";
-        const theoryUnits = selectedUnits || (randomMode ? Math.max(1, form.querySelectorAll(".subject-filter:checked").length) : 1);
+        let theoryUnits = selectedUnits || 1;
+        if (randomMode) {
+            const countsNode = document.getElementById("plan-theory-counts");
+            const counts = countsNode ? JSON.parse(countsNode.textContent || "{}") : {};
+            theoryUnits = Array.from(form.querySelectorAll(".subject-filter:checked")).reduce(
+                function (sum, subjectInput) {
+                    return sum + Math.max(0, Number(counts[subjectInput.value]) || 0);
+                }, 0
+            );
+        }
         const theoryBase = 10;
         const theoryGain = Math.min(100 - theoryBase, theoryUnits * 2);
 
