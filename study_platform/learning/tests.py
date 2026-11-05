@@ -87,12 +87,12 @@ class DailyPlanGeneratorTests(TestCase):
 
         with patch("learning.views.random.sample", side_effect=lambda items, size: list(reversed(items))):
             result = generate_daily_lessons(
-                self.student, self.subject, count=3, mode="random"
+                self.student, self.subject, count=4, mode="random"
             )
 
         self.assertEqual(result[0], unfinished)
-        self.assertIn(error_lesson, result[1:])
-        self.assertIn(new_lesson, result[2:])
+        self.assertIn(error_lesson, result[1:3])
+        self.assertEqual(result[3], new_lesson)
         self.assertNotIn(completed, result)
 
     def test_generator_returns_fewer_than_requested_when_not_enough_candidates(self):
