@@ -1614,6 +1614,21 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
     document.querySelectorAll(".js-open-daily-plan").forEach(function (button) {
         button.addEventListener("click", function () { openPlan(button); });
     });
+    const startPlanButton = document.getElementById("start-daily-plan");
+    if (startPlanButton) {
+        startPlanButton.addEventListener("click", function () {
+            const selected = subjectChoices.find(function (choice) { return choice.checked; });
+            const group = selected && subjectGroups.find(function (item) {
+                return item.dataset.subjectId === selected.value;
+            });
+            const firstLesson = group && group.querySelector("a[href]");
+            if (!firstLesson) {
+                alert("Сначала дождись формирования плана. Если уроков нет, проверь настройки количества теории.");
+                return;
+            }
+            window.location.href = firstLesson.href;
+        });
+    }
     overlay.addEventListener("click", function (event) {
         if (event.target === overlay) closePlan();
     });
