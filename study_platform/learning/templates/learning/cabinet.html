@@ -1016,21 +1016,29 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 
         <hr class="daily-plan-divider">
 
-        <div class="daily-plan-task-list">
-            <div class="daily-plan-task"><span>Карты</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="2" inputmode="numeric" aria-label="Количество заданий: Карты"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-            <div class="daily-plan-task"><span>Сопоставление</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="5" inputmode="numeric" aria-label="Количество заданий: Сопоставление"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-            <div class="daily-plan-task"><span>Выбор одного</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="7" inputmode="numeric" aria-label="Количество заданий: Выбор одного"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-            <div class="daily-plan-task"><span>Краткий ответ</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="9" inputmode="numeric" aria-label="Количество заданий: Краткий ответ"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-            <div class="daily-plan-task"><span>Развернутый ответ</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="1" inputmode="numeric" aria-label="Количество заданий: Развернутый ответ"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
+        <div class="daily-plan-task-list" aria-label="Количество заданий">
+            <div class="daily-plan-task"><span class="plan-task-count" data-count="2">2</span><span>Карты</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить карты">+</button><button type="button" data-step="-1" aria-label="Убрать карты">-</button></span></div>
+            <div class="daily-plan-task"><span class="plan-task-count" data-count="5">5</span><span>Сопоставление</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания на сопоставление">+</button><button type="button" data-step="-1" aria-label="Убрать задания на сопоставление">-</button></span></div>
+            <div class="daily-plan-task"><span class="plan-task-count" data-count="7">7</span><span>Выбор одного</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания с выбором">+</button><button type="button" data-step="-1" aria-label="Убрать задания с выбором">-</button></span></div>
+            <div class="daily-plan-task"><span class="plan-task-count" data-count="9">9</span><span>Краткий ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить краткие ответы">+</button><button type="button" data-step="-1" aria-label="Убрать краткие ответы">-</button></span></div>
+            <div class="daily-plan-task"><span class="plan-task-count" data-count="1">1</span><span>Развернутый ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить развернутые ответы">+</button><button type="button" data-step="-1" aria-label="Убрать развернутые ответы">-</button></span></div>
         </div>
 
         <div class="daily-plan-changes">
-            <p class="daily-plan-changes-title">Ожидаемые изменения:</p>
-            <div class="change-bar"><div class="change-bar-label"><span>Теория</span><strong>10%</strong></div><div class="change-bar-delta">+2%</div></div>
-            <div class="change-bar"><div class="change-bar-label"><span>Практика</span><strong>8%</strong></div><div class="change-bar-delta">+12%</div></div>
+            <h3 class="daily-plan-changes-title">Ожидаемые изменения:</h3>
+            <div class="plan-progress" data-progress-kind="theory">
+                <span class="plan-progress-base" data-base="10" style="--base-width:10%">10%</span>
+                <span class="plan-progress-change" data-change="2" style="--change-width:2%">+2%</span>
+                <span class="plan-progress-label">Теория</span>
+            </div>
+            <div class="plan-progress" data-progress-kind="practice">
+                <span class="plan-progress-base" data-base="8" style="--base-width:8%">8%</span>
+                <span class="plan-progress-change" data-change="12" style="--change-width:12%">+12%</span>
+                <span class="plan-progress-label">Практика</span>
+            </div>
         </div>
 
-        <blockquote class="daily-plan-quote"><span>Oh shit! Here we go again.</span></blockquote>
+        <blockquote class="daily-plan-quote"><span>Oh shit! Here we go again.</span><cite>Джейсон Стетхем</cite></blockquote>
     </section>
 </div>
 
@@ -1492,17 +1500,13 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape" && !overlay.hidden) closePlan();
     });
-    modal.querySelectorAll("[data-modal-step]").forEach(function (button) {
+    modal.querySelectorAll(".daily-plan-task .plan-task-controls button").forEach(function (button) {
         button.addEventListener("click", function () {
-            const input = button.parentElement.querySelector(".stepper-value");
-            const current = parseInt(input.value, 10) || 0;
-            input.value = Math.max(0, Math.min(99, current + Number(button.dataset.modalStep)));
-        });
-    });
-    modal.querySelectorAll(".stepper-value").forEach(function (input) {
-        input.addEventListener("change", function () {
-            const value = parseInt(input.value, 10);
-            input.value = Number.isNaN(value) ? 0 : Math.max(0, Math.min(99, value));
+            const counter = button.closest(".daily-plan-task").querySelector(".plan-task-count");
+            const current = Number(counter.dataset.count || counter.textContent) || 0;
+            const next = Math.max(0, Math.min(99, current + Number(button.dataset.step)));
+            counter.dataset.count = String(next);
+            counter.textContent = String(next);
         });
     });
 })();
