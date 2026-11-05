@@ -495,6 +495,60 @@ def rubricator(request):
 
 
 @require_POST
+def start_daily_plan(request):
+    """Запускает решение плана с первого урока из сформированного списка."""
+    student = _current_student(request)
+    if not student:
+        return redirect("subject_list")
+
+    mode = request.POST.get("mode", "auto").strip().lower()
+    subject_ids = request.POST.getlist("subject_filter")
+    if not subject_ids and request.POST.get("subject_id"):
+        subject_ids = [request.POST.get("subject_id")]
+
+    try:
+        subject_id = int(subject_ids[0]) if subject_ids else None
+    except (TypeError, ValueError):
+        subject_id = None
+
+    subject = student.subjects.filter(id=subject_id).first() if subject_id else None
+    if subject is None:
+        messages.warning(request, "Сначала выбери предмет для плана.")
+        return redirect("rubricator")
+
+    if mode in {"auto", "random"}:
+        saved = _student_plan_settings(request).get(str(subject.id), {})
+        default_count = 3 if "истор" in subject.title.lower() else 2 if "общ" in subject.title.lower() else 3
+        count = request.POST.get("count", saved.get("theory", default_count))
+        lessons = generate_daily_lessons(student, subject, count, mode=mode)
+    else:
+        topic_ids = request.POST.getlist("topic_ids")
+        lesson_ids = request.POST.getlist("lesson_ids")
+        microtopic_ids = request.POST.getlist("microtopic_ids")
+        selected_lesson_ids = MicroTopic.objects.filter(
+            id__in=microtopic_ids,
+            lesson__topic__subject=subject,
+            lesson__is_published=True,
+        ).values_list("lesson_id", flat=True)
+        lessons = Lesson.objects.filter(
+            topic__subject=subject,
+            topic__subject__students=student,
+            is_published=True,
+        ).filter(
+            models.Q(topic_id__in=topic_ids)
+            | models.Q(id__in=lesson_ids)
+            | models.Q(id__in=selected_lesson_ids)
+        ).select_related("topic").order_by("topic__order", "topic_id", "order", "id")
+
+    first_lesson = lessons.first() if hasattr(lessons, "first") else (lessons[0] if lessons else None)
+    if first_lesson is None:
+        messages.warning(request, "В плане пока нет доступных опубликованных уроков.")
+        return redirect("rubricator")
+
+    return redirect("lesson_detail", lesson_id=first_lesson.id)
+
+
+@require_POST
 def generate_daily_plan(request):
     """Возвращает персонально подобранные уроки для выбранного предмета."""
     student = _current_student(request)
