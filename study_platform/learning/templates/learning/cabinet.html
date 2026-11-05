@@ -714,6 +714,45 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
     .welcome-mood { top: 63%; font-size: 1rem; }
     .demo-welcome-button { top: 82%; font-size: 1.1rem; }
 }
+
+/* Поп-ап плана: геометрия и расположение по Figma 6316:76 */
+.plan-modal-window, .daily-plan-modal {
+ position:relative; box-sizing:border-box; width:min(568px,calc(100vw - 24px)); height:min(819px,calc(100dvh - 24px));
+ min-height:0; max-height:none; margin:auto; padding:0; overflow:hidden; border:0; border-radius:4px; background:#fff; box-shadow:none;
+}
+.plan-modal-title, .daily-plan-title { position:absolute; left:170px; top:58px; margin:0; font-family:"Jost Local","Jost",Arial,sans-serif; font-size:24px; font-weight:400; line-height:1.2; }
+.plan-subjects, .daily-plan-subjects { position:absolute; left:165px; top:127px; display:flex; flex-direction:row; align-items:center; gap:24px; margin:0; font-size:13px; line-height:1.2; }
+.plan-subject, .daily-plan-subjects .check { display:inline-flex; align-items:center; gap:8px; font-size:13px; }
+.plan-subject input, .daily-plan-subjects input { width:24px; height:24px; margin:0; accent-color:#080808; }
+.plan-topics, .daily-plan-topics { position:absolute; left:171px; top:203px; display:flex; flex-direction:column; gap:4px; width:386px; max-height:132px; overflow:auto; margin:0; font-size:13px; line-height:1.75; }
+.plan-topic, .daily-plan-topic { font-size:13px; line-height:1.75; }
+.plan-topic-parent, .daily-plan-topic small { color:#888; font-size:10px; }
+.plan-task-list, .daily-plan-task-list { position:absolute; left:172px; top:353px; display:grid; grid-template-columns:1fr; gap:0; width:386px; margin:0; }
+.plan-task, .daily-plan-task { display:grid; grid-template-columns:161px 1fr 64px; align-items:center; gap:0; min-height:27px; font-size:13px; line-height:1.2; }
+.plan-task-count, .daily-plan-task .plan-task-count { grid-column:2; grid-row:1; justify-self:start; width:auto; height:auto; border:0; border-radius:0; font-size:13px; font-weight:500; }
+.plan-task > span:nth-child(2), .daily-plan-task > span:nth-child(2) { grid-column:1; grid-row:1; }
+.plan-task-controls, .daily-plan-task .plan-task-controls { grid-column:3; grid-row:1; display:flex; align-items:center; justify-content:flex-start; gap:24px; }
+.plan-task-controls button, .daily-plan-task .plan-task-controls button { padding:0; border:0; background:none; font-size:17px; line-height:1; }
+.plan-changes, .daily-plan-changes { position:absolute; left:172px; top:540px; width:242px; margin:0; }
+.plan-changes-title, .daily-plan-changes-title { margin:0 0 10px; font-size:13px; font-weight:400; }
+.plan-progress { height:18px; margin-top:7px; overflow:visible; background:transparent; font-size:8px; }
+.plan-progress-base { min-width:0; padding-right:4px; font-size:8px; }
+.plan-progress-change { min-width:0; border:0; background:#b1ffa5; font-size:8px; }
+.plan-progress-label { display:none; }
+.plan-quote-button, .daily-plan-quote { position:absolute; left:215px; top:679px; display:inline-flex; flex-direction:column; align-items:flex-start; margin:0; padding:0 0 2px; border:0; border-bottom:1px solid #080808; border-radius:0; background:transparent; color:#080808; font-family:"Jost Local","Jost",Arial,sans-serif; font-size:13px; font-weight:400; line-height:1.2; text-align:left; cursor:pointer; }
+.daily-plan-quote { left:215px; top:679px; }
+.plan-quote-author, .daily-plan-quote cite { display:none; }
+@media(max-width:600px) {
+ .plan-modal-window, .daily-plan-modal { width:min(568px,calc(100vw - 16px)); height:min(819px,calc(100dvh - 16px)); }
+ .plan-modal-title, .daily-plan-title { left:30%; top:7.1%; font-size:clamp(18px,4.2vw,24px); }
+ .plan-subjects, .daily-plan-subjects { left:29%; top:15.5%; gap:12px; }
+ .plan-topics, .daily-plan-topics { left:30%; top:24.8%; width:68%; }
+ .plan-task-list, .daily-plan-task-list { left:30.3%; top:43.1%; width:68%; }
+ .plan-task, .daily-plan-task { grid-template-columns:42% 1fr 64px; }
+ .plan-changes, .daily-plan-changes { left:30.3%; top:65.9%; width:43%; }
+ .plan-quote-button, .daily-plan-quote { left:37.9%; top:82.9%; }
+}
+
 </style>
 </head>
 
@@ -1114,7 +1153,7 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
             </div>
         </div>
 
-        <blockquote class="daily-plan-quote"><span>Oh shit! Here we go again.</span><cite>Джейсон Стетхем</cite></blockquote>
+        <button class="daily-plan-quote" id="start-daily-plan" type="button">Oh shit! Here we go again.</button>
     </section>
 </div>
 
