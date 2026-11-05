@@ -1,0 +1,1428 @@
+{% load static l10n %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Личный кабинет</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,200;0,400;0,700;1,200&display=swap" rel="stylesheet">
+
+<style>
+/* Шрифты лежат в static/fonts/ */
+@font-face {
+    font-family: "Jost Local";
+    src: local("Jost"), url("{% static 'fonts/Jost-VariableFont_wght.ttf' %}") format("truetype");
+    font-weight: 100 900; font-style: normal; font-display: swap;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: local("Jost Italic"), url("{% static 'fonts/Jost-Italic-VariableFont_wght.ttf' %}") format("truetype");
+    font-weight: 100 900; font-style: italic; font-display: swap;
+}
+@font-face {
+    font-family: "KyivType Serif";
+    src: local("KyivType Serif Heavy 2"), local("KyivTypeSerif-Heavy2"),
+         url("{% static 'fonts/KyivTypeSerif-Heavy2.otf' %}") format("opentype");
+    font-weight: 900; font-display: swap;
+}
+@font-face {
+    font-family: "KyivType Serif";
+    src: local("KyivType Serif Bold"), local("KyivTypeSerif-Bold"),
+         url("{% static 'fonts/KyivTypeSerif-Bold.otf' %}") format("opentype");
+    font-weight: 700; font-display: swap;
+}
+
+:root {
+    --font-text: "Jost Local", "Jost", Arial, sans-serif;
+    --font-display: "KyivType Serif", Georgia, serif;
+    --line: #171717;
+    --gray: #9E9E9E;
+    --track: #D9D9D9;
+}
+
+* { box-sizing: border-box; }
+
+/* Масштаб страницы: больше число 0.8889vw — крупнее страница */
+html { font-size: clamp(10px, .8889vw, 19px); }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    color: #080808;
+    font-family: var(--font-text);
+}
+
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+ul { margin: 0; padding: 0; list-style: none; }
+h1, h2, h3, p, blockquote { margin: 0; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+
+/* ---------- Каркас: меню | основная колонка | правая колонка ---------- */
+.cabinet {
+    flex: 1;
+    width: min(58.3125rem, calc(100% - 2.5rem));
+    margin: 0 auto;
+    padding-top: 5.25rem;
+    display: grid;
+    grid-template-columns: 9.1875rem 30.125rem 5.375rem 13.625rem;
+    align-items: start;
+}
+
+.side { grid-column: 1; grid-row: 1 / 3; }
+.side-logo { display: block; width: 4.5rem; height: 4.5rem; object-fit: contain; }
+.side-nav { display: flex; flex-direction: column; margin-top: 2rem; font-size: 1.125rem; line-height: 2.4375rem; }
+.side-nav a:hover, .side-nav a:focus-visible { text-decoration: underline; text-underline-offset: .25rem; }
+.side-nav a.is-active { font-weight: 700; }
+.nav-dot {
+    display: inline-block;
+    width: .5rem;
+    height: .5rem;
+    margin-left: .35rem;
+    padding: 0;
+    border-radius: 50%;
+    background: #080808;
+    font-size: 0;
+    line-height: 0;
+    vertical-align: middle;
+    position: relative;
+    top: 0;
+}
+
+.head { grid-column: 2 / 4; grid-row: 1; }
+
+.user-row { display: flex; align-items: flex-start; gap: 1.875rem; }
+
+.user-name {
+    font-family: var(--font-display);
+    font-size: 2.75rem;
+    font-weight: 900;
+    line-height: 1.1;
+}
+
+.head-icons { display: flex; gap: .875rem; margin-top: .5rem; }
+.head-icon { display: inline-flex; width: 1.125rem; height: 1.125rem; }
+.head-icon svg { width: 100%; height: 100%; fill: #000; }
+
+.mood {
+    margin-top: .375rem;
+    font-family: var(--font-text);
+    font-size: 1.4rem;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.mood-name {
+    color: var(--gray);
+    border: 0;
+    padding: 0;
+    text-decoration: none;
+}
+
+.refresh {
+    display: inline-flex;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-left: .75rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    vertical-align: middle;
+}
+.refresh svg { width: 100%; height: 100%; transition: transform .45s ease; }
+.refresh.is-rolling svg { transform: rotate(360deg); }
+
+/* Предметы */
+.subjects { display: flex; align-items: center; gap: 4rem; margin-top: 3rem; padding-left: .1875rem; font-size: 1.625rem; }
+.check { display: flex; align-items: center; gap: .875rem; cursor: pointer; }
+.check input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.box { flex: 0 0 1.25rem; width: 1.25rem; height: 1.25rem; border: 2px solid #000; border-radius: .1875rem; }
+.check input:checked + .box {
+    background: #000 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.5l2.6 2.6L10 3.4' fill='none' stroke='%23fff' stroke-width='1.8'/%3E%3C/svg%3E") center / .8rem no-repeat;
+}
+.check input:focus-visible + .box { outline: 2px solid #000; outline-offset: 3px; }
+
+/* Цитата */
+.quote {
+    grid-column: 4;
+    grid-row: 1;
+    margin-top: 4.625rem;
+    font-size: 1.0625rem;
+    line-height: 1.0625rem;
+    white-space: nowrap;
+}
+.quote cite {
+    display: block;
+    margin-top: .5rem;
+    margin-left: -.25rem;
+    color: #9a9a9a;
+    font-size: .75rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1;
+}
+
+/* ---------- Панели предметов ---------- */
+.panels { grid-column: 2 / 5; grid-row: 2; margin-top: 3.375rem; }
+
+.panel-grid {
+    display: grid;
+    grid-template-columns: 30.125rem 13.625rem;
+    column-gap: 5.375rem;
+    align-items: start;
+}
+
+.col-side { padding-top: .1875rem; }
+
+.card-title { display: flex; align-items: center; gap: .625rem; font-size: 1.5rem; font-weight: 400; line-height: 1.2; }
+
+/* Кнопки с рамкой */
+.btn {
+    display: flex;
+    align-items: center;
+    gap: .625rem;
+    width: 100%;
+    height: 3rem;
+    padding: 0 .8125rem;
+    border: 1px solid var(--line);
+    border-radius: .25rem;
+    background: #fff;
+    color: #080808;
+    font-size: .8125rem;
+    font-weight: 500;
+    letter-spacing: .12em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+.btn--sm { width: 12.5rem; height: 2.25rem; margin-left: .125rem; padding: 0 .75rem; }
+.btn:hover, .btn:focus-visible { background: #080808; color: #fff; }
+
+/* ---------- План ---------- */
+.plan-rows { display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; margin-top: 1.75rem; }
+.plan-row { display: flex; align-items: center; gap: 1.25rem; min-height: 1.75rem; }
+.plan-row .card-title { min-width: 6.5rem; }
+
+.stepper {
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    min-width: 5.5rem;
+    height: 1.75rem;
+    margin-top: .25rem;
+    border: 0;
+    border-radius: 0;
+}
+.stepper button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 1rem;
+    width: 1rem;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+.stepper button svg { display: block; width: .75rem; height: 1rem; }
+.stepper button:hover svg { opacity: .55; }
+.stepper-value {
+    flex: 0 0 1.25rem;
+    width: 1.25rem;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    font-size: 1.25rem;
+    line-height: 1;
+    text-align: center;
+}
+
+.plan-actions { display: grid; gap: 1.0625rem; margin-top: 2.3125rem; }
+
+/* ---------- Прогресс ---------- */
+.progress-card { margin-top: 3.75rem; }
+
+.legend { display: flex; gap: 1.375rem; margin-top: .4375rem; font-size: .8125rem; line-height: 1.2; }
+.lg::before { content: ""; display: inline-block; width: 1.125rem; margin-right: .5rem; border-top: 1px solid #000; vertical-align: middle; }
+.lg-acc::before { border-top: 1px dotted #7f9bb5; }
+.lg-plan::before { border-top: 1px dashed #888; }
+
+.seg-group { display: flex; gap: 1.125rem; margin-top: .9375rem; font-size: .8125rem; }
+.seg { display: flex; gap: 1.125rem; }
+.seg button { padding: 0; border: 0; background: none; color: #666; font-size: .8125rem; line-height: 1.2; }
+.seg button:hover { color: #000; }
+.seg button[aria-pressed="true"] { color: #000; text-decoration: underline; text-underline-offset: .3rem; }
+
+.chart-wrap { position: relative; margin-top: .125rem; }
+.chart { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
+.chart path { fill: none; vector-effect: non-scaling-stroke; }
+.chart .previous { stroke: #A9C1D6; stroke-width: 1; stroke-dasharray: 2 3; }
+.chart .current { stroke: #000; stroke-width: 1.2; }
+.chart .highlight { stroke: #FF3B3B; stroke-width: 1.2; }
+.chart .area { stroke: none; }
+.chart .plan-line { stroke: #888; stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.chart .c-hv-line { vector-effect: non-scaling-stroke; }
+.chart .c-axes { display: none; }   /* в макете подписей осей нет; уберите эту строку, чтобы вернуть */
+.chart text { fill: #666; font-family: var(--font-text); font-size: 12px; }
+
+.chart-tip {
+    position: absolute;
+    z-index: 5;
+    padding: .25rem .5rem;
+    border-radius: .375rem;
+    background: #000;
+    color: #fff;
+    font-size: .75rem;
+    white-space: nowrap;
+    pointer-events: none;
+    transform: translate(-50%, -140%);
+}
+
+.best-line { display: flex; flex-wrap: wrap; gap: .25rem .75rem; margin-top: 2.1875rem; font-size: .8125rem; line-height: 1.2; }
+
+.bars { margin-top: 1.125rem; }
+.bar { position: relative; height: 1.0625rem; background: var(--track); }
+.bar + .bar { margin-top: .4375rem; }
+.bar-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: .375rem;
+    overflow: hidden;
+    background: #000;
+    color: #fff;
+    font-size: .5625rem;
+    font-weight: 700;
+}
+.bar-name { position: absolute; inset: 0 1.5rem 0 auto; display: flex; align-items: center; color: #444; font-size: .75rem; }
+
+.ready-line { display: flex; flex-wrap: wrap; gap: .25rem 2.5rem; margin-top: 1.1875rem; font-size: .8125rem; line-height: 1.2; }
+.ready-line span { display: inline-flex; align-items: center; gap: .375rem; }
+.v { font-weight: 700; }
+.v--gray { color: var(--gray); }
+
+.demo-note { margin-top: 1rem; color: #888; font-size: .75rem; font-style: italic; }
+.empty { color: #888; font-size: 1.0625rem; }
+
+/* ---------- Подборки от препода ---------- */
+.assign-card { margin-top: 4.625rem; }
+.assign { margin-top: 1.5rem; }
+.assign li + li { margin-top: 2.375rem; }
+
+.collection-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    text-align: left;
+}
+.collection-toggle svg { width: .875rem; height: .875rem; transition: transform .2s ease; }
+.collection:not(.is-open) .collection-toggle svg { transform: rotate(180deg); }
+.collection:not(.is-open) .assign-meta { display: none; }
+
+.assign-meta { display: flex; font-size: .8125rem; line-height: 1.25rem; }
+.assign-meta:first-of-type { margin-top: .4375rem; }
+.assign-meta span { flex: 0 0 3.75rem; }
+.assign-meta b { font-weight: 700; }
+.assign-meta a:hover { text-decoration: underline; }
+
+/* ---------- Правая колонка ---------- */
+.topic { margin-top: 1.9375rem; }
+.topic-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .625rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    text-align: left;
+    white-space: nowrap;
+}
+.topic-toggle svg { width: .875rem; height: .875rem; transition: transform .2s ease; }
+.topic.is-open .topic-toggle svg { transform: rotate(180deg); }
+.topic:not(.is-open) .topic-stats, .topic:not(.is-open) .topic-action { display: none; }
+.topic-stats { display: flex; gap: 2.25rem; margin-top: .1875rem; padding-left: .125rem; font-size: .8125rem; }
+.topic-stats b { font-weight: 700; }
+.topic-action { margin-top: 1rem; }
+.topic-action--icons { display: flex; align-items: center; gap: .625rem; font-size: 1.125rem; }
+.status-icon { display: inline-flex; align-items: center; justify-content: center; width: 1.125rem; height: 1.125rem; padding: 0; border: 1px solid #171717; border-radius: .25rem; background: #fff; color: #080808; }
+.status-icon svg { display: block; width: .75rem; height: .75rem; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.status-icon:hover, .status-icon:focus-visible { background: #080808; color: #fff; }
+
+.mistakes-card { margin-top: 6rem; }
+.mistakes { margin-top: 1.125rem; padding: 0 1.3125rem 0 .25rem; }
+.mistakes li + li { margin-top: 1.125rem; }
+.mistake-name { display: block; font-size: 1.5rem; line-height: 1.2; }
+.mini-track { height: .25rem; margin-top: .1875rem; background: var(--track); }
+.mini-track i { display: block; height: 100%; background: #000; }
+.mistakes small { display: block; margin-top: .3125rem; font-size: .8125rem; }
+.mistakes-card .btn--sm, .trial-card .btn--sm { margin-top: 1.75rem; }
+.section-action-icons { display: flex; align-items: center; gap: .625rem; margin-top: 1rem; font-size: 1.125rem; }
+
+.trial-card { margin-top: 6.125rem; }
+.trials { margin-top: 1.125rem; padding: 0 1.0625rem 0 .25rem; }
+.trials li + li { margin-top: 1.25rem; }
+.trial-link { display: block; }
+.trial-title { display: flex; align-items: center; gap: .5rem; font-size: 1.5rem; line-height: 1.2; }
+.tag { font-size: .6875rem; font-weight: 700; }
+.trial-stats { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: .3125rem; font-size: .8125rem; }
+.trial-stats b { font-weight: 700; }
+.trend { margin-right: .375rem; font-size: .6875rem; }
+.trend--down { color: #D13B3B; }
+.trend--up { color: #2E8B57; }
+.trend[data-tip], .hint-tip { position: relative; cursor: help; }
+.trend[data-tip]::after, .hint-tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + .55rem);
+    left: 50%;
+    z-index: 30;
+    width: max-content;
+    max-width: min(17rem, 75vw);
+    padding: .6rem .8rem;
+    border: 0;
+    border-radius: .55rem;
+    background: #fff;
+    color: #080808;
+    box-shadow: 0 .2rem .9rem rgb(0 0 0 / 14%);
+    font-size: .875rem;
+    font-weight: 400;
+    line-height: 1.35;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, .2rem);
+    pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+}
+.trend[data-tip]::after { left: auto; right: 0; transform: translateY(.2rem); }
+.trend[data-tip]:hover::after, .trend[data-tip]:focus::after,
+.hint-tip:hover::after, .hint-tip:focus::after, .hint-tip:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
+.trend[data-tip]:hover::after, .trend[data-tip]:focus::after { transform: translateY(0); }
+.status-icon.hint-tip::after { left: 50%; bottom: calc(100% + .65rem); }
+.trial-card .btn--sm { margin-top: 1.9375rem; }
+
+/* ---------- Футер ---------- */
+footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
+.footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: .5rem 3.25rem; font-size: 1.25rem; line-height: 1.5; }
+.footer-links a:hover, .footer-links a:focus-visible { text-decoration: underline; text-underline-offset: .25rem; }
+
+@media (prefers-reduced-motion: reduce) {
+    .refresh svg, .trend[data-tip]::after, .topic-toggle svg, .collection-toggle svg { transition: none; }
+}
+
+/* ---------- Мобильная версия ---------- */
+@media (max-width: 700px) {
+    html { font-size: 16px; }
+
+    .cabinet { display: flex; flex-direction: column; padding-top: 24px; }
+    .side { display: flex; align-items: center; gap: 20px; margin-bottom: 28px; }
+    .side-logo { width: 48px; height: 48px; }
+    .side-nav { flex-direction: row; flex-wrap: wrap; gap: 4px 18px; margin: 0; font-size: 16px; line-height: 1.4; }
+
+    .user-name { font-size: 2.25rem; }
+    .mood { font-size: 1.15rem; }
+    .subjects { flex-wrap: wrap; gap: 14px 28px; font-size: 1.25rem; }
+    .quote { margin: 28px 0 0; white-space: normal; }
+
+    .panels { margin-top: 36px; }
+    .panel-grid { display: flex; flex-direction: column; gap: 44px; }
+    .col-main, .col-side { display: contents; }
+    .plan-card { order: 1; }
+    .topics-card { order: 2; }
+    .progress-card { order: 3; }
+    .mistakes-card { order: 4; }
+    .assign-card { order: 5; }
+    .trial-card { order: 6; }
+    .progress-card, .assign-card, .mistakes-card, .trial-card { margin-top: 0; }
+
+    .plan-rows { align-items: flex-start; }
+    .btn--sm { width: 100%; margin-left: 0; }
+    .mistakes, .trials { padding-right: 0; }
+
+    footer { margin-top: 48px; padding-bottom: 24px; }
+    .footer-links { gap: 6px 24px; font-size: 16px; }
+}
+
+/* ---------- Поп-ап дневного плана ---------- */
+.daily-plan-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: .5rem;
+    background: rgba(0, 0, 0, .16);
+}
+.daily-plan-modal {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(27rem, calc(100vw - 1rem));
+    min-height: min(48rem, calc(100dvh - 1rem));
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    padding: 4.25rem 4.9rem 5.8rem;
+    border-radius: .35rem;
+    background: #fff;
+    color: #080808;
+    box-shadow: 0 .15rem .8rem rgba(0,0,0,.08);
+    scrollbar-width: thin;
+    scrollbar-color: #080808 transparent;
+}
+.daily-plan-modal::-webkit-scrollbar { width: 3px; }
+.daily-plan-modal::-webkit-scrollbar-thumb { background: #080808; }
+.daily-plan-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+.daily-plan-title {
+    margin: 0 0 2.4rem;
+    font-size: 1.75rem;
+    font-weight: 400;
+    line-height: 1.2;
+    text-align: center;
+}
+.daily-plan-subjects {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .45rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.65rem;
+    line-height: 1.15;
+}
+.daily-plan-subjects .check { gap: .45rem; }
+.daily-plan-subjects .box { width: 1.35rem; height: 1.35rem; flex-basis: 1.35rem; }
+.daily-plan-subject-group { display: grid; gap: .55rem; }
+.daily-plan-topic { display: flex; flex-direction: column; gap: .08rem; }
+.daily-plan-topic small { color: #888; font-size: .78em; }
+.daily-plan-empty { color: #888; }
+.daily-plan-topics {
+    display: grid;
+    gap: .75rem;
+    margin: 0 0 1.65rem;
+    font-size: .95rem;
+    line-height: 1.25;
+}
+.daily-plan-divider { height: 1px; margin: 0 0 2rem; border: 0; background: #080808; }
+.daily-plan-task-list { display: grid; gap: .65rem; margin-bottom: 3.5rem; }
+.daily-plan-task {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    font-size: .95rem;
+    line-height: 1.2;
+}
+.daily-plan-task .stepper { margin: 0; min-width: 3.8rem; height: 1.45rem; }
+.daily-plan-task .stepper button { flex-basis: .9rem; width: .9rem; }
+.daily-plan-task .stepper button svg { width: .7rem; height: .9rem; }
+.daily-plan-task .stepper-value { flex-basis: 1rem; width: 1rem; font-size: 1rem; font-weight: 500; }
+.daily-plan-changes { margin-top: auto; }
+.daily-plan-changes-title { margin-bottom: .65rem; font-size: .95rem; }
+.change-bar {
+    display: flex;
+    width: 100%;
+    height: 1.15rem;
+    margin-top: .35rem;
+    background: #d9d9d9;
+    font-size: .7rem;
+    line-height: 1;
+}
+.change-bar-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 78%;
+    padding: 0 .45rem;
+    background: #080808;
+    color: #fff;
+}
+.change-bar-label strong { font-size: .65rem; }
+.change-bar-delta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    border: 1px solid #080808;
+    background: #a7f39a;
+    color: #080808;
+    font-size: .62rem;
+}
+.daily-plan-quote {
+    margin: 5.9rem 0 0;
+    font-size: .95rem;
+    line-height: 1.2;
+    text-align: center;
+}
+.daily-plan-quote span { border-bottom: 1px solid #080808; padding-bottom: .15rem; }
+@media (max-width: 520px) {
+    .daily-plan-modal {
+        width: min(27rem, calc(100vw - .75rem));
+        min-height: min(48rem, calc(100dvh - .75rem));
+        padding: 4rem 3.9rem 5.4rem;
+    }
+}
+@media (max-width: 370px) {
+    .daily-plan-modal { padding-right: 3.2rem; padding-left: 3.2rem; }
+}
+
+
+/* ---------- Приветствие при входе в демо-аккаунт ---------- */
+.demo-welcome-overlay[hidden] { display: none !important; }
+.demo-welcome-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, .28);
+}
+.demo-welcome-modal {
+    position: relative;
+    width: min(31rem, calc(100vw - 2rem));
+    padding: 3.5rem 3rem 2.75rem;
+    background: #fff;
+    color: #080808;
+    border: 1px solid #080808;
+    box-shadow: 0 .15rem .8rem rgba(0,0,0,.08);
+    text-align: center;
+}
+.demo-welcome-close {
+    position: absolute;
+    top: .8rem;
+    right: .9rem;
+    border: 0;
+    padding: .1rem .35rem;
+    background: transparent;
+    font-size: 1.6rem;
+    line-height: 1;
+}
+.demo-welcome-title {
+    margin: 0 0 1.25rem;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1.15;
+}
+.demo-welcome-text {
+    margin: 0 auto 2rem;
+    max-width: 23rem;
+    font-size: 1.1rem;
+    line-height: 1.45;
+}
+.demo-welcome-button {
+    min-width: 10rem;
+    padding: .7rem 1.4rem;
+    border: 1px solid #080808;
+    background: #080808;
+    color: #fff;
+    font-size: 1rem;
+}
+.demo-welcome-button:hover { background: #333; }
+@media (max-width: 520px) {
+    .demo-welcome-modal { padding: 3.5rem 1.5rem 2rem; }
+    .demo-welcome-title { font-size: 1.7rem; }
+}
+
+</style>
+</head>
+
+<body>
+<div class="cabinet">
+
+    <aside class="side">
+        <a href="/" aria-label="На главную">
+            <img class="side-logo" src="{% static 'images/logo.svg' %}" alt="Логотип студии">
+        </a>
+        <nav class="side-nav" aria-label="Главное меню">
+            <a href="/">Главная</a>
+            <a href="{% url 'rubricator' %}">Теория</a>
+            <a href="/practice/">Практика</a>
+            <a href="/cabinet/" class="is-active" aria-current="page">Кабинет <span class="nav-dot" aria-hidden="true"></span></a>
+            <a href="/about/">О нас</a>
+        </nav>
+    </aside>
+
+    <header class="head">
+        <div class="user-row">
+            <h1 class="user-name">{% if student.is_demo %}Соул Гудман (Демо){% else %}{{ user_name }}{% endif %}</h1>
+        </div>
+
+        <p class="mood">
+            <span class="mood-name" id="mood-name">{{ student_mood|default:"атакующий катафракт" }}</span>
+        </p>
+
+        <div class="subjects" role="radiogroup" aria-label="Предмет">
+            {% for tab in tabs %}
+            <label class="check">
+                <input type="radio" name="subject" value="{{ tab.key }}" {% if forloop.first %}checked{% endif %}>
+                <span class="box"></span>{{ tab.title }}
+            </label>
+            {% endfor %}
+        </div>
+    </header>
+
+    <blockquote class="quote">
+        «Делай как надо.<br>Как не надо —<br>не делай.»
+        <cite>Джейсон Стетхем</cite>
+    </blockquote>
+
+    <main class="panels">
+    {% for tab in tabs %}
+    <div class="subject-panel" data-subject="{{ tab.key }}" data-subject-id="{{ tab.subject_id }}"{% if student.is_demo %} data-demo="true"{% endif %}{% if not forloop.first %} hidden{% endif %}>
+        <div class="panel-grid">
+
+            <div class="col-main">
+
+                <section class="plan-card">
+                    <h2 class="card-title">План <span class="plan-date">{% now "j E" %}</span></h2>
+
+                    <div class="plan-rows">
+                        <div class="plan-row">
+                            <h3 class="card-title">Теория
+                            </h3>
+                            <div class="stepper">
+                                <button type="button" data-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14" aria-hidden="true"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button>
+                                <input class="stepper-value" type="text" inputmode="numeric" value="{{ tab.plan_theory }}" aria-label="Количество уроков теории">
+                                <button type="button" data-step="1" aria-label="Больше"><svg viewBox="0 0 10 14" aria-hidden="true"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button>
+                            </div>
+                        </div>
+
+                        <div class="plan-row">
+                            <h3 class="card-title">Практика
+                            </h3>
+                            <div class="stepper">
+                                <button type="button" data-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14" aria-hidden="true"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button>
+                                <input class="stepper-value" type="text" inputmode="numeric" value="{{ tab.plan_practice }}" aria-label="Количество заданий практики">
+                                <button type="button" data-step="1" aria-label="Больше"><svg viewBox="0 0 10 14" aria-hidden="true"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="plan-actions">
+                        <button class="btn plan-action js-open-daily-plan" type="button">
+                            Генерируем и стартуем
+                        </button>
+                        <a class="btn plan-action" href="{% url 'rubricator' %}">Выберу самостоятельно</a>
+                    </div>
+                </section>
+
+                <section class="progress-card">
+                    <h2 class="card-title">Прогресс
+                    </h2>
+
+                    <p class="legend">
+                        <span class="lg">Задачи</span>
+                        <span class="lg lg-acc">Верно %</span>
+                        <span class="lg lg-plan">План</span>
+                    </p>
+
+                    <div class="seg-group">
+                        <div class="seg" role="group" aria-label="Период" data-seg="period">
+                            <button type="button" data-value="7" aria-pressed="true">Неделя</button>
+                            <button type="button" data-value="30" aria-pressed="false">Месяц</button>
+                        </div>
+                        <div class="seg" role="group" aria-label="Что показывать" data-seg="mode">
+                            <button type="button" data-value="theory" aria-pressed="false">Теория</button>
+                            <button type="button" data-value="practice" aria-pressed="false">Практика</button>
+                        </div>
+                    </div>
+
+                    <div class="chart-wrap">
+                        <svg class="chart" viewBox="0 0 445 170" role="img" aria-label="График прогресса: задачи и доля верных ответов по дням">
+                            <defs>
+                                <linearGradient id="area-{{ tab.key }}" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0" stop-color="#000" stop-opacity=".07"/>
+                                    <stop offset="1" stop-color="#000" stop-opacity="0"/>
+                                </linearGradient>
+                                <clipPath id="below-{{ tab.key }}"><rect class="c-rect" x="0" y="0" width="445" height="170"/></clipPath>
+                            </defs>
+                            <g class="c-axes"></g>
+                            <path class="area c-area" style="fill:url(#area-{{ tab.key }})"/>
+                            <line class="plan-line c-plan"/>
+                            <path class="previous c-acc"/>
+                            <path class="current c-tasks"/>
+                            <path class="highlight c-low" clip-path="url(#below-{{ tab.key }})"/>
+                            <g class="c-hover" style="display:none">
+                                <line class="c-hv-line" stroke="#000" stroke-opacity=".25"/>
+                                <circle class="c-hv-tasks" r="3" fill="#000"/>
+                                <circle class="c-hv-acc" r="3" fill="#7f9bb5" stroke="#fff"/>
+                            </g>
+                        </svg>
+                        <div class="chart-tip" hidden></div>
+                    </div>
+
+                    <div class="best-line">
+                        <span>Лучший результат: <span data-metric="best_date">{{ tab.metrics.best_date|default:"—" }}</span></span>
+                        <span><span data-metric="topics">{{ tab.metrics.topics|default:"—" }}</span> // <span data-metric="exercises">{{ tab.metrics.exercises|default:"—" }}</span> // <span data-metric="correct">{{ tab.metrics.correct|default:"—" }}</span></span>
+                    </div>
+
+                    <div class="bars">
+                        <div class="bar">
+                            <div class="bar-fill" data-bar="theory" style="width:{{ tab.theory_percent|unlocalize }}%">{{ tab.theory_percent|floatformat:"0" }}%</div>
+                            <span class="bar-name">Теория</span>
+                        </div>
+                        <div class="bar">
+                            <div class="bar-fill" data-bar="practice" style="width:{{ tab.practice_percent|unlocalize }}%">{{ tab.practice_percent|floatformat:"0" }}%</div>
+                            <span class="bar-name">Практика</span>
+                        </div>
+                    </div>
+
+                    <p class="ready-line">
+                        <span>Моя готовность: <b class="v v--gray" data-metric="readiness">{{ tab.metrics.readiness|default:"—" }}</b></span>
+                        <span>Кодификатор: <b class="v"><span class="v--gray" data-metric="codifier_done">{{ tab.metrics.codifier_done|default:"—" }}</span>/<span data-metric="codifier_total">{{ tab.metrics.codifier_total|default:"—" }}</span></b></span>
+                    </p>
+
+                    {% if student.is_demo %}
+                    <p class="demo-note">Это примерные показатели. Данные обновятся после прохождения первой темы.</p>
+                    {% endif %}
+                </section>
+
+                <section class="assign-card">
+                    <h2 class="card-title">Подборки от препода:
+                    </h2>
+
+                    <ul class="assign">
+                        {% for a in tab.assignments %}
+                        <li class="collection is-open">
+                            <button class="collection-toggle" type="button" aria-expanded="true">{{ a.title }}<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
+                            <div class="assign-meta"><span>Практика</span><b>{{ a.practice|default:a.due|default:"Подборка" }}</b></div>
+                            {% if a.cards_url %}<div class="assign-meta"><span>Карточки</span><b><a href="{{ a.cards_url }}">Скачать (pdf)</a></b></div>{% endif %}
+                        </li>
+                        {% empty %}
+                        {% if student.is_demo %}
+                        <li class="collection is-open">
+                            <button class="collection-toggle" type="button" aria-expanded="true">Культура XVIII века<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
+                            <div class="assign-meta"><span>Практика</span><b>12 упражнений</b></div>
+                            <div class="assign-meta"><span>Карточки</span><b>Скачать (pdf)</b></div>
+                        </li>
+                        <li class="collection is-open">
+                            <button class="collection-toggle" type="button" aria-expanded="true">Персоны X-XIII веков<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
+                            <div class="assign-meta"><span>Практика</span><b>12 упражнений</b></div>
+                            <div class="assign-meta"><span>Карточки</span><b>Скачать (pdf)</b></div>
+                        </li>
+                        {% else %}
+                        <li class="empty">Подборок пока нет</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </section>
+
+            </div>
+
+            <div class="col-side">
+
+                <section class="topics-card">
+                    <h2 class="card-title">Последняя тема
+                        
+                    </h2>
+
+                    {% for topic in tab.topics|slice:":1" %}
+                    <div class="topic is-open">
+                        <button class="topic-toggle" type="button" aria-expanded="true">{{ topic.title }}<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
+                        <p class="topic-stats">
+                            <span>Теория {{ topic.theory_percent|floatformat:"0" }}%</span>
+                            <span>Практика {{ topic.practice_done }}/<b>{{ topic.practice_total }}</b></span>
+                        </p>
+                        <div class="topic-action topic-action--icons">
+                            <span>Продолжим?</span>
+                            <a class="status-icon status-icon--yes hint-tip" data-tip="Включим эту тему в твой план" tabindex="0" href="{{ topic.url }}" aria-label="Продолжить тему">
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.2 6.5 11l6.3-6.5"/></svg>
+                            </a>
+                            <button class="status-icon status-icon--no hint-tip" data-tip="Исключим эту тему из твоего плана" type="button" aria-label="Отложить тему">
+                                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 4.5 7 7m0-7-7 7"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="empty topic">Пока нет изученных тем</p>
+                    {% endfor %}
+
+                    {% if student.is_demo %}
+                    <p class="demo-note">Пример темы для демонстрации. Данные обновятся после прохождения первой темы.</p>
+                    {% endif %}
+                </section>
+
+                <section class="mistakes-card">
+                    <h2 class="card-title hint-tip" data-tip="Тут собраны твои ошибки в практике" tabindex="0">Счетчик косяков:</h2>
+
+                    <ul class="mistakes">
+                        {% for item in tab.mistakes %}
+                        <li>
+                            <span class="mistake-name">{{ item.title }}</span>
+                            {% if item.accuracy is not None %}
+                            <div class="mini-track"><i style="width:{{ item.accuracy|unlocalize }}%"></i></div>
+                            <small>{{ item.accuracy }}% верно</small>
+                            {% endif %}
+                        </li>
+                        {% empty %}
+                        {% if student.is_demo %}
+                        <li><span class="mistake-name">Дмитрий Донской</span><div class="mini-track"><i style="width:42%"></i></div><small>42% верно</small></li>
+                        <li><span class="mistake-name">Иван III</span><div class="mini-track"><i style="width:27%"></i></div><small>27% верно</small></li>
+                        {% else %}
+                        <li class="empty">Пока косяков нет</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+
+                    {% if tab.mistakes or student.is_demo %}
+                    <div class="section-action-icons">
+                        <span>Исправим?</span>
+                        <a class="status-icon status-icon--yes hint-tip" data-tip="Включим эту тему в твой план" tabindex="0" href="/practice/?subject={{ tab.key }}&amp;mode=mistakes" aria-label="Исправить ошибки"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.2 6.5 11l6.3-6.5"/></svg></a>
+                        <button class="status-icon status-icon--no hint-tip" data-tip="Исключим эту тему из твоего плана" type="button" aria-label="Не сейчас"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 4.5 7 7m0-7-7 7"/></svg></button>
+                    </div>
+                    {% endif %}
+                </section>
+
+                <section class="trial-card">
+                    <h2 class="card-title">Пробники:</h2>
+
+                    <ul class="trials">
+                        {% for trial in tab.trials %}
+                        <li>
+                            <a class="trial-link" href="{{ trial.url }}">
+                                <span class="trial-title">{{ trial.title }}{% if trial.tag %}<span class="tag">{{ trial.tag }}</span>{% endif %}</span>
+                                <div class="mini-track"><i style="width:{{ trial.percent|unlocalize }}%"></i></div>
+                                <span class="trial-stats">
+                                    <span><b>{{ trial.score }}</b> // {{ trial.total }} баллов ({{ trial.percent }}%)</span>
+                                    <span>{% if trial.trend == "worse" %}<span class="trend trend--down" tabindex="0" data-tip="Результат хуже предыдущего пробника.">↓ хуже</span>{% elif trial.trend == "better" %}<span class="trend trend--up">↑ лучше</span>{% endif %}</span>
+                                </span>
+                            </a>
+                        </li>
+                        {% empty %}
+                        {% if student.is_demo %}
+                        <li>
+                            <a class="trial-link" href="/practice/?subject={{ tab.key }}&amp;mode=exam">
+                                <span class="trial-title">Вариант 5<span class="tag">ОБ.</span></span>
+                                <div class="mini-track"><i style="width:42%"></i></div>
+                                <span class="trial-stats"><span><b>12</b> // 47 баллов (42%)</span><span><span class="trend trend--down" tabindex="0" data-tip="Результат хуже предыдущего пробника.">↓ хуже</span></span></span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="trial-link" href="/practice/?subject={{ tab.key }}&amp;mode=exam">
+                                <span class="trial-title">Вариант 9<span class="tag">IX-XIV вв.</span></span>
+                                <div class="mini-track"><i style="width:13%"></i></div>
+                                <span class="trial-stats"><span><b>6</b> // 47 баллов (13%)</span><span><span class="trend trend--down" tabindex="0" data-tip="Результат хуже предыдущего пробника.">↓ хуже</span></span></span>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="empty">Пока нет выполненных пробников</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+
+                    <div class="section-action-icons">
+                        <span>Соберём?</span>
+                        <a class="status-icon status-icon--yes hint-tip" data-tip="Перейдем на страницу сбора пробника" tabindex="0" href="/practice/?subject={{ tab.key }}&amp;mode=exam" aria-label="Собрать пробник"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.2 6.5 11l6.3-6.5"/></svg></a>
+                        <button class="status-icon status-icon--no hint-tip" data-tip="Пока не будем собирать" type="button" aria-label="Не сейчас"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4.5 4.5 7 7m0-7-7 7"/></svg></button>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+        {% if tab.chart %}{% with cid="chart-data-"|add:tab.key %}{{ tab.chart|json_script:cid }}{% endwith %}{% endif %}
+    </div>
+    {% endfor %}
+    </main>
+</div>
+
+<footer>
+    <nav class="footer-links" aria-label="Наши проекты">
+        <a href="#footer">tg-бот</a>
+        <a href="#footer">tg-канал</a>
+        <a href="#footer">Интерактивный атлас</a>
+    </nav>
+</footer>
+
+
+{% if show_demo_welcome %}
+<div class="demo-welcome-overlay" id="demo-welcome-overlay">
+    <section class="demo-welcome-modal" role="dialog" aria-modal="true" aria-labelledby="demo-welcome-title">
+        <button class="demo-welcome-close" type="button" aria-label="Закрыть окно">&times;</button>
+        <h2 class="demo-welcome-title" id="demo-welcome-title">Добро пожаловать!</h2>
+        <p class="demo-welcome-text">Ты вошёл в демонстрационный кабинет. Здесь можно познакомиться с платформой и посмотреть, как устроены учебные разделы.</p>
+        <button class="demo-welcome-button" type="button">Понятно</button>
+    </section>
+</div>
+{% endif %}
+
+<div class="daily-plan-overlay" id="daily-plan-overlay" data-has-selection="{% if has_rubricator_selection %}true{% else %}false{% endif %}" hidden>
+    <section class="daily-plan-modal" role="dialog" aria-modal="true" aria-labelledby="daily-plan-title">
+        <button class="daily-plan-close" type="button" aria-label="Закрыть план">&times;</button>
+        <h2 class="daily-plan-title" id="daily-plan-title">План <span id="daily-plan-date"></span></h2>
+
+        <div class="daily-plan-subjects" id="daily-plan-subjects">
+            {% for plan_subject in daily_plan_subjects %}
+            <label class="check">
+                <input
+                    type="checkbox"
+                    class="daily-subject-choice"
+                    value="{{ plan_subject.id }}"
+                    {% if plan_subject.is_selected %}checked{% endif %}
+                >
+                <span class="box"></span><span>{{ plan_subject.title }}</span>
+            </label>
+            {% endfor %}
+        </div>
+
+        <div class="daily-plan-topics" id="daily-plan-topics">
+            {% for plan_subject in daily_plan_subjects %}
+            <div class="daily-plan-subject-group" data-subject-id="{{ plan_subject.id }}" {% if not plan_subject.is_selected %}hidden{% endif %}>
+                {% for item in plan_subject.items %}
+                <div class="daily-plan-topic">
+                    <span>{{ item.title }}</span>
+                    {% if item.parent %}<small>{{ item.parent }}</small>{% endif %}
+                </div>
+                {% empty %}
+                <div class="daily-plan-empty">
+                    {% if rubricator_selection_mode == "random" %}
+                        Для этого предмета сохранён случайный подбор. Состав плана подключим следующим этапом.
+                    {% elif has_rubricator_selection %}
+                        Для этого предмета пока нет выбранных тем.
+                    {% else %}
+                        Сначала выбери темы в рубрикаторе.
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+
+        <hr class="daily-plan-divider">
+
+        <div class="daily-plan-task-list">
+            <div class="daily-plan-task"><span>Карты</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="2" inputmode="numeric" aria-label="Количество заданий: Карты"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
+            <div class="daily-plan-task"><span>Сопоставление</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="5" inputmode="numeric" aria-label="Количество заданий: Сопоставление"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
+            <div class="daily-plan-task"><span>Выбор одного</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="7" inputmode="numeric" aria-label="Количество заданий: Выбор одного"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
+            <div class="daily-plan-task"><span>Краткий ответ</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="9" inputmode="numeric" aria-label="Количество заданий: Краткий ответ"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
+            <div class="daily-plan-task"><span>Развернутый ответ</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="1" inputmode="numeric" aria-label="Количество заданий: Развернутый ответ"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
+        </div>
+
+        <div class="daily-plan-changes">
+            <p class="daily-plan-changes-title">Ожидаемые изменения:</p>
+            <div class="change-bar"><div class="change-bar-label"><span>Теория</span><strong>10%</strong></div><div class="change-bar-delta">+2%</div></div>
+            <div class="change-bar"><div class="change-bar-label"><span>Практика</span><strong>8%</strong></div><div class="change-bar-delta">+12%</div></div>
+        </div>
+
+        <blockquote class="daily-plan-quote"><span>Oh shit! Here we go again.</span></blockquote>
+    </section>
+</div>
+
+<script>
+/* ПРИВЕТСТВИЕ ДЕМО-АККАУНТА */
+(function () {
+    const overlay = document.getElementById("demo-welcome-overlay");
+    if (!overlay) return;
+    const closeButton = overlay.querySelector(".demo-welcome-close");
+    const okButton = overlay.querySelector(".demo-welcome-button");
+    const modal = overlay.querySelector(".demo-welcome-modal");
+
+    function closeWelcome() {
+        overlay.hidden = true;
+        document.body.style.overflow = "";
+    }
+
+    document.body.style.overflow = "hidden";
+    closeButton.addEventListener("click", closeWelcome);
+    okButton.addEventListener("click", closeWelcome);
+    overlay.addEventListener("click", function (event) {
+        if (event.target === overlay) closeWelcome();
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !overlay.hidden) closeWelcome();
+    });
+    closeButton.focus();
+})();
+
+/* ПЕРЕКЛЮЧЕНИЕ ПРЕДМЕТОВ */
+function showSubject(key) {
+    document.querySelectorAll(".subject-panel").forEach(function (panel) {
+        panel.hidden = panel.dataset.subject !== key;
+    });
+}
+document.querySelectorAll('input[name="subject"]').forEach(function (radio) {
+    radio.addEventListener("change", function () { showSubject(radio.value); });
+});
+const activeSubject = document.querySelector('input[name="subject"]:checked');
+if (activeSubject) showSubject(activeSubject.value);
+
+/* НАСТРОЕНИЕ */
+const MOODS = ["атакующий катафракт", "милосердный катафракт", "усталый медоед", "орущая чайка",
+    "сонный енот", "тревожный голубь", "суровый барсук", "удивлённая капибара",
+    "уставший филин", "боевой тушканчик"];
+const moodName = document.getElementById("mood-name");
+try {
+    const savedMood = sessionStorage.getItem("studentMood");
+    if (savedMood && MOODS.includes(savedMood)) moodName.textContent = savedMood;
+} catch (e) {}
+
+/* ДАТА */
+document.querySelectorAll(".plan-date").forEach(function (el) {
+    el.textContent = new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+});
+
+/* «!» внутри ссылок не должен уводить со страницы */
+document.querySelectorAll("a .info").forEach(function (icon) {
+    icon.addEventListener("click", function (event) { event.preventDefault(); });
+});
+
+/* СЧЁТЧИКИ ПЛАНА */
+function updateActionLinks(panel) {
+    const rows = panel.querySelectorAll(".plan-row");
+    const theory = rows[0].querySelector(".stepper-value").value;
+    const practice = rows[1].querySelector(".stepper-value").value;
+    const generate = panel.querySelector(".js-open-daily-plan");
+    if (generate) {
+        generate.dataset.theory = theory;
+        generate.dataset.practice = practice;
+        generate.dataset.subject = panel.dataset.subject;
+    }
+}
+
+document.querySelectorAll(".plan-row").forEach(function (row) {
+    const input = row.querySelector(".stepper-value");
+    function setValue(value) {
+        let number = parseInt(value, 10);
+        if (Number.isNaN(number)) number = 1;
+        input.value = Math.max(0, Math.min(99, number));
+        const panel = row.closest(".subject-panel");
+        panel.dispatchEvent(new Event("plan-change"));
+        updateActionLinks(panel);
+    }
+    row.querySelectorAll("[data-step]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            setValue((parseInt(input.value, 10) || 0) + Number(button.dataset.step));
+        });
+    });
+    input.addEventListener("change", function () { setValue(input.value); });
+});
+document.querySelectorAll(".subject-panel").forEach(updateActionLinks);
+
+/* РАСКРЫТИЕ: ПОСЛЕДНЯЯ ТЕМА И ПОДБОРКИ */
+document.querySelectorAll(".topic-toggle, .collection-toggle").forEach(function (button) {
+    button.addEventListener("click", function () {
+        const box = button.closest(".topic, .collection");
+        const open = box.classList.toggle("is-open");
+        button.setAttribute("aria-expanded", String(open));
+    });
+});
+
+/* ПЛАВНЫЕ ЛИНИИ ГРАФИКА */
+function curve(points) {
+    const n = points.length;
+    if (n < 2) return "";
+    const dx = [], slopes = [], tangents = [];
+    for (let i = 0; i < n - 1; i++) {
+        dx[i] = points[i + 1][0] - points[i][0];
+        slopes[i] = (points[i + 1][1] - points[i][1]) / dx[i];
+    }
+    tangents[0] = slopes[0];
+    tangents[n - 1] = slopes[n - 2];
+    for (let i = 1; i < n - 1; i++) {
+        tangents[i] = slopes[i - 1] * slopes[i] <= 0 ? 0 : (slopes[i - 1] + slopes[i]) / 2;
+    }
+    for (let i = 0; i < n - 1; i++) {
+        if (slopes[i] === 0) { tangents[i] = 0; tangents[i + 1] = 0; continue; }
+        const a = tangents[i] / slopes[i], b = tangents[i + 1] / slopes[i], q = a * a + b * b;
+        if (q > 9) {
+            const k = 3 / Math.sqrt(q);
+            tangents[i] = k * a * slopes[i];
+            tangents[i + 1] = k * b * slopes[i];
+        }
+    }
+    let path = "M" + points[0];
+    for (let i = 0; i < n - 1; i++) {
+        const h = dx[i] / 3;
+        path += "C" + (points[i][0] + h) + "," + (points[i][1] + tangents[i] * h) + " " +
+            (points[i + 1][0] - h) + "," + (points[i + 1][1] - tangents[i + 1] * h) + " " + points[i + 1];
+    }
+    return path;
+}
+
+/* ГРАФИК: задачи (чёрная), верно % (синяя), план (пунктир) */
+function initChart(panel) {
+    const q = function (selector) { return panel.querySelector(selector); };
+    const svg = q(".chart"), tip = q(".chart-tip"), hover = q(".c-hover");
+    const W = 445, H = 170, X0 = 0, X1 = 445, Y0 = 6, Y1 = 158;
+    const state = { period: 7, mode: "all" };
+    let view = null;
+
+    const dataEl = document.getElementById("chart-data-" + panel.dataset.subject);
+    let days = dataEl ? JSON.parse(dataEl.textContent) : [];
+
+    if (!days.length && panel.dataset.demo === "true") {
+        const today = new Date();
+        days = Array.from({ length: 30 }, function (_, i) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - 29 + i);
+            const answered = Math.floor(Math.random() * 8) + 5;
+            return {
+                date: date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0"),
+                theory: Math.floor(Math.random() * 4) + 1,
+                practice: Math.floor(Math.random() * 8) + 2,
+                answered: answered,
+                correct: Math.floor(answered * (.55 + Math.random() * .4))
+            };
+        });
+    }
+
+    if (!days.length) {
+        svg.hidden = true;
+        tip.hidden = true;
+        const message = document.createElement("p");
+        message.className = "empty";
+        message.textContent = "Здесь появится динамика после первых занятий";
+        svg.parentElement.appendChild(message);
+    }
+
+    function formatDate(value) {
+        return new Date(value + "T00:00").toLocaleDateString("ru-RU", { day: "numeric", month: "short" });
+    }
+
+    function render() {
+        if (!days.length) return;
+        const inputs = panel.querySelectorAll(".plan-row .stepper-value");
+        const theoryPlan = Number(inputs[0].value) || 0, practicePlan = Number(inputs[1].value) || 0;
+        const visibleDays = days.slice(-state.period), n = visibleDays.length;
+        const value = function (day) {
+            if (state.mode === "theory") return day.theory;
+            if (state.mode === "practice") return day.practice;
+            return day.theory + day.practice;
+        };
+        const plan = state.mode === "theory" ? theoryPlan : state.mode === "practice" ? practicePlan : theoryPlan + practicePlan;
+        const top = Math.max(1, Math.ceil(Math.max(plan, ...visibleDays.map(value)) * 1.1));
+        const showAccuracy = state.mode !== "theory";
+        const accuracy = function (day) { return day.answered > 0 ? day.correct / day.answered * 100 : null; };
+        const x = function (i) { return n > 1 ? X0 + i * (X1 - X0) / (n - 1) : (X0 + X1) / 2; };
+        const yTasks = function (v) { return Y1 - v / top * (Y1 - Y0); };
+        const yAccuracy = function (v) { return Y1 - v / 100 * (Y1 - Y0); };
+
+        const taskPoints = visibleDays.map(function (day, i) { return [x(i), yTasks(value(day))]; });
+        const accuracyPoints = showAccuracy
+            ? visibleDays.map(function (day, i) { return accuracy(day) === null ? null : [x(i), yAccuracy(accuracy(day))]; }).filter(Boolean)
+            : [];
+        const line = curve(taskPoints);
+
+        q(".c-tasks").setAttribute("d", line);
+        q(".c-low").setAttribute("d", line);
+        q(".c-acc").setAttribute("d", accuracyPoints.length > 1 ? curve(accuracyPoints) : "");
+        q(".c-area").setAttribute("d", line ? line + "L" + X1 + "," + Y1 + "L" + X0 + "," + Y1 + "Z" : "");
+
+        const planY = yTasks(plan), planLine = q(".c-plan");
+        ["x1", "x2", "y1", "y2"].forEach(function (attr, index) { planLine.setAttribute(attr, [X0, X1, planY, planY][index]); });
+        planLine.style.display = plan > 0 ? "" : "none";
+        q(".c-rect").setAttribute("y", planY);
+        q(".c-rect").setAttribute("height", Math.max(0, H - planY));
+
+        view = { days: visibleDays, tasks: taskPoints, value: value, accuracy: accuracy, yAccuracy: yAccuracy, showAccuracy: showAccuracy };
+        hideHover();
+    }
+
+    function showPoint(index) {
+        const day = view.days[index], point = view.tasks[index], acc = view.accuracy(day);
+        const rect = svg.getBoundingClientRect(), scale = rect.width / W;
+        hover.style.display = "";
+        const line = q(".c-hv-line");
+        line.setAttribute("x1", point[0]); line.setAttribute("x2", point[0]);
+        line.setAttribute("y1", Y0); line.setAttribute("y2", Y1);
+        q(".c-hv-tasks").setAttribute("cx", point[0]);
+        q(".c-hv-tasks").setAttribute("cy", point[1]);
+        const dot = q(".c-hv-acc"), hasAccuracy = view.showAccuracy && acc !== null;
+        dot.style.display = hasAccuracy ? "" : "none";
+        if (hasAccuracy) { dot.setAttribute("cx", point[0]); dot.setAttribute("cy", view.yAccuracy(acc)); }
+        tip.textContent = formatDate(day.date) + " · задач: " + view.value(day) +
+            (hasAccuracy ? " · верно: " + Math.round(acc) + "%" : "");
+        tip.hidden = false;
+        const width = tip.offsetWidth;
+        tip.style.left = Math.min(rect.width - width / 2, Math.max(width / 2, point[0] * scale)) + "px";
+        tip.style.top = point[1] * scale + "px";
+    }
+
+    function hideHover() { hover.style.display = "none"; tip.hidden = true; }
+
+    function onMove(event) {
+        if (!view || !view.tasks.length) return;
+        const rect = svg.getBoundingClientRect();
+        const px = (event.clientX - rect.left) * W / rect.width;
+        let best = 0;
+        view.tasks.forEach(function (point, index) {
+            if (Math.abs(point[0] - px) < Math.abs(view.tasks[best][0] - px)) best = index;
+        });
+        showPoint(best);
+    }
+
+    svg.addEventListener("pointermove", onMove);
+    svg.addEventListener("pointerdown", onMove);
+    svg.addEventListener("pointerleave", hideHover);
+
+    // Период: одна из двух кнопок. Теория / Практика: повторное нажатие возвращает «всё вместе»
+    panel.querySelectorAll(".seg").forEach(function (seg) {
+        seg.addEventListener("click", function (event) {
+            const button = event.target.closest("button");
+            if (!button) return;
+            const isMode = seg.dataset.seg === "mode";
+            const wasOn = button.getAttribute("aria-pressed") === "true";
+            seg.querySelectorAll("button").forEach(function (item) {
+                item.setAttribute("aria-pressed", String(item === button && (!isMode || !wasOn)));
+            });
+            if (isMode) state.mode = wasOn ? "all" : button.dataset.value;
+            else state.period = Number(button.dataset.value);
+            render();
+        });
+    });
+
+    panel.addEventListener("plan-change", render);
+    render();
+}
+
+/* ЗАПУСК И ДЕМОПОКАЗАТЕЛИ (значения как в макете) */
+function makeDemoMetrics() {
+    const today = new Date();
+    const daysAgo = Math.floor(Math.random() * 24) + 1;
+    const bestDate = new Date(today);
+    bestDate.setDate(today.getDate() - daysAgo);
+    const topics = Math.floor(Math.random() * 5) + 3;
+    const exercises = Math.floor(Math.random() * 31) + 25;
+    const correct = Math.min(exercises, Math.floor(exercises * (0.68 + Math.random() * 0.2)));
+    return {
+        best_date: bestDate.toLocaleDateString("ru-RU", { day: "numeric", month: "long" }),
+        topics: topics + " тем",
+        exercises: exercises + " упражнений",
+        correct: correct + " верно",
+        readiness: (Math.floor(Math.random() * 18) + 28) + "%",
+        codifier_done: String(Math.floor(Math.random() * 4) + 7),
+        codifier_total: "24"
+    };
+}
+const DEMO_METRICS = makeDemoMetrics();
+
+document.querySelectorAll(".subject-panel").forEach(function (panel) {
+    initChart(panel);
+    if (panel.dataset.demo === "true") {
+        panel.querySelectorAll("[data-metric]").forEach(function (el) {
+            if (DEMO_METRICS[el.dataset.metric]) el.textContent = DEMO_METRICS[el.dataset.metric];
+        });
+        [["theory", 10], ["practice", 8]].forEach(function (pair) {
+            const bar = panel.querySelector('[data-bar="' + pair[0] + '"]');
+            if (bar && parseFloat(bar.style.width) === 0) {
+                bar.style.width = pair[1] + "%";
+                bar.textContent = pair[1] + "%";
+            }
+        });
+    }
+});
+
+/* ПОП-АП ДНЕВНОГО ПЛАНА */
+(function () {
+    const overlay = document.getElementById("daily-plan-overlay");
+    if (!overlay) return;
+    const modal = overlay.querySelector(".daily-plan-modal");
+    const closeButton = overlay.querySelector(".daily-plan-close");
+    const date = document.getElementById("daily-plan-date");
+    const subjectChoices = Array.from(overlay.querySelectorAll(".daily-subject-choice"));
+    const subjectGroups = Array.from(overlay.querySelectorAll(".daily-plan-subject-group"));
+    const hasSavedSelection = overlay.dataset.hasSelection === "true";
+    let previousFocus = null;
+
+    function updatePlanTopics() {
+        const checkedIds = new Set(
+            subjectChoices.filter(function (choice) { return choice.checked; })
+                .map(function (choice) { return choice.value; })
+        );
+        subjectGroups.forEach(function (group) {
+            group.hidden = !checkedIds.has(group.dataset.subjectId);
+        });
+    }
+
+    subjectChoices.forEach(function (choice) {
+        choice.addEventListener("change", updatePlanTopics);
+    });
+
+    function openPlan(button) {
+        previousFocus = document.activeElement;
+        date.textContent = new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+
+        // Если пользователь ещё не сохранял выбор в рубрикаторе,
+        // при первом открытии показываем предмет текущей вкладки кабинета.
+        if (!hasSavedSelection) {
+            const currentPanel = button.closest(".subject-panel");
+            const currentSubjectId = currentPanel ? currentPanel.dataset.subjectId : "";
+            subjectChoices.forEach(function (choice) {
+                choice.checked = choice.value === currentSubjectId;
+            });
+        }
+
+        updatePlanTopics();
+        overlay.hidden = false;
+        document.body.style.overflow = "hidden";
+        closeButton.focus();
+    }
+    function closePlan() {
+        overlay.hidden = true;
+        document.body.style.overflow = "";
+        if (previousFocus) previousFocus.focus();
+    }
+    document.querySelectorAll(".js-open-daily-plan").forEach(function (button) {
+        button.addEventListener("click", function () { openPlan(button); });
+    });
+    closeButton.addEventListener("click", closePlan);
+    overlay.addEventListener("click", function (event) {
+        if (event.target === overlay) closePlan();
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !overlay.hidden) closePlan();
+    });
+    modal.querySelectorAll("[data-modal-step]").forEach(function (button) {
+        button.addEventListener("click", function () {
+            const input = button.parentElement.querySelector(".stepper-value");
+            const current = parseInt(input.value, 10) || 0;
+            input.value = Math.max(0, Math.min(99, current + Number(button.dataset.modalStep)));
+        });
+    });
+    modal.querySelectorAll(".stepper-value").forEach(function (input) {
+        input.addEventListener("change", function () {
+            const value = parseInt(input.value, 10);
+            input.value = Number.isNaN(value) ? 0 : Math.max(0, Math.min(99, value));
+        });
+    });
+})();
+
+</script>
+</body>
+</html>

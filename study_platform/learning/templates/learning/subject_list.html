@@ -1,0 +1,1090 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>История &amp; Общество</title>
+
+<style>
+
+/* ==============================
+   ШРИФТЫ JOST
+============================== */
+
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Thin.ttf' %}") format("truetype");
+    font-weight: 100;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-ExtraLight.ttf' %}") format("truetype");
+    font-weight: 200;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Light.ttf' %}") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Regular.ttf' %}") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Medium.ttf' %}") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-SemiBold.ttf' %}") format("truetype");
+    font-weight: 600;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Bold.ttf' %}") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-ExtraBold.ttf' %}") format("truetype");
+    font-weight: 800;
+    font-style: normal;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Black.ttf' %}") format("truetype");
+    font-weight: 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-ThinItalic.ttf' %}") format("truetype");
+    font-weight: 100;
+    font-style: italic;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-ExtraLightItalic.ttf' %}") format("truetype");
+    font-weight: 200;
+    font-style: italic;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-LightItalic.ttf' %}") format("truetype");
+    font-weight: 300;
+    font-style: italic;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-Italic.ttf' %}") format("truetype");
+    font-weight: 400;
+    font-style: italic;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-MediumItalic.ttf' %}") format("truetype");
+    font-weight: 500;
+    font-style: italic;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-SemiBoldItalic.ttf' %}") format("truetype");
+    font-weight: 600;
+    font-style: italic;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-BoldItalic.ttf' %}") format("truetype");
+    font-weight: 700;
+    font-style: italic;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-ExtraBoldItalic.ttf' %}") format("truetype");
+    font-weight: 800;
+    font-style: italic;
+}
+@font-face {
+    font-family: "Jost Local";
+    src: url("{% static 'fonts/Jost-BlackItalic.ttf' %}") format("truetype");
+    font-weight: 900;
+    font-style: italic;
+}
+
+/* ==============================
+   KYIVTYPE SERIF
+============================== */
+
+@font-face {
+    font-family: "KyivType Serif";
+    src: local("KyivType Serif Heavy 2"),
+         local("KyivTypeSerif-Heavy2"),
+         url("{% static 'fonts/KyivTypeSerif-Heavy2.otf' %}") format("opentype");
+    font-weight: 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "KyivType Serif";
+    src: local("KyivType Serif Thin"),
+         local("KyivTypeSerif-Thin"),
+         url("{% static 'fonts/KyivTypeSerif-Thin.otf' %}") format("opentype");
+    font-weight: 100;
+    font-style: normal;
+}
+
+/* ==============================
+   ОБЩИЕ НАСТРОЙКИ
+============================== */
+
+:root {
+    --font-text: "Jost Local", "Jost", Arial, sans-serif;
+    --font-display: "KyivType Serif", Georgia, serif;
+    --gray: #9E9E9E;
+    --lime: #D7FF38;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    font-size: clamp(10px, min(1.3dvh, 0.85vw), 16px);
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    color: #080808;
+    font-family: var(--font-text);
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+button, input {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+h1, p, ul {
+    margin: 0;
+    padding: 0;
+}
+
+:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: 3px;
+}
+
+.page-width {
+    width: min(49.5rem, calc(100% - 2.5rem));
+    margin: 0 auto;
+}
+
+/* ==============================
+   ШАПКА
+============================== */
+
+.site-header {
+    padding-top: 4rem;
+}
+
+.header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: .75rem;
+}
+
+.studio-logo {
+    display: block;
+    width: 4.5rem;
+    height: 4.5rem;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.main-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 35.3125rem;
+    margin-right: 1.25rem;
+    white-space: nowrap;
+}
+
+.main-nav a {
+    font-size: 1.25rem;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.main-nav a:hover,
+.main-nav a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: .25rem;
+}
+
+/* ==============================
+   ГЛАВНЫЙ БЛОК
+============================== */
+
+main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    width: 100%;
+    padding: 1rem 0;
+}
+
+.hero {
+    width: max-content;
+    max-width: 100%;
+    color: #000;
+    font-family: var(--font-display);
+    font-size: 9.8125rem;
+    font-weight: 900;
+    line-height: 1.2;
+}
+
+.hero-line {
+    display: block;
+    white-space: nowrap;
+}
+
+.hero-line--second {
+    margin-left: 1.01em;
+}
+
+.hero-amp {
+    margin-left: .3em;
+    font-weight: 100;
+}
+
+/* ==============================
+   ВВОД КОДА
+============================== */
+
+.login-form {
+    position: relative;
+}
+
+.code-row {
+    display: flex;
+    align-items: center;
+    gap: 1.4375rem;
+}
+
+.badge {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 1.25rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: help;
+}
+
+.code-badge {
+    width: 100%;
+    height: 100%;
+    fill: #000;
+}
+
+.code-input {
+    width: 16rem;
+    max-width: calc(100vw - 6rem);
+    padding: .25rem 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #080808;
+    font-size: 1.5rem;
+    font-weight: 400;
+    line-height: 1.3;
+    text-transform: uppercase;
+}
+
+.code-input::placeholder {
+    color: #080808;
+    opacity: 1;
+}
+
+.code-input:focus,
+.code-input:focus-visible {
+    outline: 0;
+}
+
+.code-row:focus-within .code-input {
+    text-decoration: underline;
+    text-underline-offset: .4rem;
+}
+
+.login-error {
+    position: absolute;
+    top: 100%;
+    left: 2.6875rem;
+    margin-top: .5rem;
+    color: #B00020;
+    font-size: .9375rem;
+    white-space: nowrap;
+}
+
+/* ==============================
+   ПОДСКАЗКИ
+============================== */
+
+.tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + .625rem);
+    left: 0;
+    z-index: 20;
+    width: max-content;
+    max-width: min(16rem, 70vw);
+    padding: .5rem .75rem;
+    border-radius: .5rem;
+    background: #000;
+    color: #fff;
+    font-size: .875rem;
+    line-height: 1.3;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease;
+}
+
+.tip:hover::after,
+.tip:focus::after {
+    opacity: 1;
+}
+
+/* ==============================
+   ФУТЕР
+============================== */
+
+footer {
+    padding: 1rem 0 2.5rem;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .5rem 3.25rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
+}
+
+.footer-links a:hover,
+.footer-links a:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: .25rem;
+}
+
+/* ==============================
+   ОКНО ПРИВЕТСТВИЯ
+============================== */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    animation: modal-in .35s ease both;
+}
+
+@keyframes modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(1rem);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.welcome {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1.25rem;
+    text-align: center;
+}
+
+.welcome-title {
+    color: var(--gray);
+    font-family: var(--font-display);
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1.14;
+    text-transform: uppercase;
+}
+
+.welcome-name {
+    max-width: 100%;
+    margin-top: 4.5rem;
+    color: #000;
+    font-family: var(--font-display);
+    font-size: 3.75rem;
+    font-weight: 900;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+}
+
+.mood-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: .375rem 0;
+    margin-top: 2.4375rem;
+    font-size: 1.375rem;
+    line-height: 1.3;
+}
+
+.mood-select {
+    position: relative;
+    display: inline-block;
+}
+
+.mood-value {
+    padding: 0 0 0 .4rem;
+    border: 0;
+    background: none;
+    color: var(--gray);
+    font-weight: 300;
+    line-height: inherit;
+}
+
+.mood-value:hover,
+.mood-value[aria-expanded="true"] {
+    color: #666;
+}
+
+.mood-list {
+    position: absolute;
+    top: calc(100% + .625rem);
+    left: 50%;
+    z-index: 5;
+    width: max-content;
+    min-width: 100%;
+    max-height: 17rem;
+    padding: .5rem 0;
+    overflow-y: auto;
+    background: #fff;
+    box-shadow: 0 .5rem 2rem rgba(0, 0, 0, .14);
+    text-align: left;
+    transform: translateX(-50%);
+}
+
+.mood-list[hidden] {
+    display: none;
+}
+
+.mood-option {
+    display: block;
+    width: 100%;
+    padding: .375rem 1.25rem;
+    border: 0;
+    background: none;
+    color: #666;
+    font-size: 1.125rem;
+    font-weight: 400;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.mood-option:hover,
+.mood-option:focus-visible {
+    background: #f2f2f2;
+    color: #000;
+}
+
+.mood-option[aria-selected="true"] {
+    color: #000;
+    font-weight: 700;
+}
+
+/* ==============================
+   СМЕНА СОСТОЯНИЯ
+============================== */
+
+.refresh {
+    display: inline-flex;
+    flex: 0 0 1.5rem;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-left: 1.6875rem;
+    padding: 0;
+    border: 0;
+    background: none;
+}
+
+.refresh svg {
+    width: 100%;
+    height: 100%;
+    transition: transform .45s ease;
+}
+
+.refresh.is-rolling svg {
+    transform: rotate(360deg);
+}
+
+/* ==============================
+   КНОПКА СТАРТА
+============================== */
+
+.start-btn {
+    margin-top: 6.25rem;
+    padding: .5rem 1rem;
+    border: 0;
+    background: none;
+    color: #080808;
+    font-size: 1.4rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.start-btn:hover,
+.start-btn:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: .4rem;
+}
+
+/* ==============================
+   АНИМАЦИИ
+============================== */
+
+@media (prefers-reduced-motion: reduce) {
+    .modal-overlay {
+        animation: none;
+    }
+
+    .refresh svg,
+    .tip::after {
+        transition: none;
+    }
+}
+
+/* ==============================
+   МОБИЛЬНАЯ ВЕРСИЯ
+============================== */
+
+@media (max-width: 700px) {
+
+    html {
+        font-size: 16px;
+    }
+
+    .site-header {
+        padding-top: 24px;
+    }
+
+    .header-inner {
+        gap: 20px;
+        padding-left: 0;
+    }
+
+    .studio-logo {
+        width: 48px;
+        height: 48px;
+    }
+
+    .main-nav {
+        width: auto;
+        flex: 1;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 12px 18px;
+        margin-right: 0;
+    }
+
+    .main-nav a {
+        font-size: 16px;
+    }
+
+    .hero {
+        font-size: min(calc((100vw - 40px) / 6.4), 14vh);
+        line-height: 1.15;
+    }
+
+    .code-input {
+        font-size: 1.125rem;
+        width: 13rem;
+    }
+
+    .code-row {
+        gap: 14px;
+    }
+
+    .login-error {
+        left: 34px;
+    }
+
+    .welcome-title {
+        font-size: 2.5rem;
+    }
+
+    .welcome-name {
+        margin-top: 2.5rem;
+        font-size: 2.5rem;
+    }
+
+    .mood-row {
+        margin-top: 1.5rem;
+        font-size: 1.125rem;
+    }
+
+    .start-btn {
+        margin-top: 3.5rem;
+        font-size: 1.25rem;
+    }
+
+    footer {
+        padding-bottom: 24px;
+    }
+
+    .footer-links {
+        gap: 6px 24px;
+        font-size: 16px;
+    }
+}
+
+</style>
+</head>
+
+<body{% if show_welcome_modal %} class="modal-open"{% endif %}>
+
+<!-- ==============================
+     ШАПКА
+============================== -->
+
+<header class="site-header">
+    <div class="page-width header-inner">
+
+        <a href="/" aria-label="На главную">
+            <img
+                class="studio-logo"
+                src="{% static 'images/logo.svg' %}"
+                alt="Логотип студии"
+            >
+        </a>
+
+        <nav class="main-nav" aria-label="Главное меню">
+            <a href="/">Главная</a>
+            <a href="{% url 'rubricator' %}">Теория</a>
+            <a href="/practice/">Практика</a>
+            <a href="/about/">О нас</a>
+        </nav>
+
+    </div>
+</header>
+
+<!-- ==============================
+     ГЛАВНАЯ СТРАНИЦА
+============================== -->
+
+<main>
+
+    <h1 class="hero">
+        <span class="hero-line">
+            История <span class="hero-amp">&amp;</span>
+        </span>
+        <span class="hero-line hero-line--second">
+            Общество
+        </span>
+    </h1>
+
+    <!-- Форма входа по персональному коду -->
+
+    <form
+        class="login-form"
+        method="post"
+        action="{% url 'subject_list' %}"
+        autocomplete="off"
+    >
+
+        {% csrf_token %}
+
+        <div class="code-row">
+
+            <span
+                class="badge tip"
+                tabindex="0"
+                role="img"
+                aria-label="Код сообщает преподаватель"
+                data-tip="Код тебе сообщает преподаватель. Для демо возьми Q12M1P9"
+            >
+
+                <svg
+                    class="code-badge"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
+                    <path d="M23.50 12.00 L23.31 12.59 L22.79 13.13 L22.07 13.60 L21.34 13.99 L20.76 14.35 L20.46 14.75 L20.47 15.25 L20.72 15.88 L21.09 16.63 L21.40 17.42 L21.50 18.17 L21.30 18.76 L20.80 19.13 L20.06 19.26 L19.21 19.21 L18.39 19.10 L17.71 19.05 L17.23 19.20 L16.94 19.61 L16.77 20.27 L16.63 21.09 L16.41 21.91 L16.06 22.57 L15.55 22.94 L14.93 22.94 L14.26 22.61 L13.60 22.07 L13.00 21.50 L12.47 21.06 L12.00 20.90 L11.53 21.06 L11.00 21.50 L10.40 22.07 L9.74 22.61 L9.07 22.94 L8.45 22.94 L7.94 22.57 L7.59 21.91 L7.37 21.09 L7.23 20.27 L7.06 19.61 L6.77 19.20 L6.29 19.05 L5.61 19.10 L4.79 19.21 L3.94 19.26 L3.20 19.13 L2.70 18.76 L2.50 18.17 L2.60 17.42 L2.91 16.63 L3.28 15.88 L3.53 15.25 L3.54 14.75 L3.24 14.35 L2.66 13.99 L1.93 13.60 L1.21 13.13 L0.69 12.59 L0.50 12.00 L0.69 11.41 L1.21 10.87 L1.93 10.40 L2.66 10.01 L3.24 9.65 L3.54 9.25 L3.53 8.75 L3.28 8.12 L2.91 7.37 L2.60 6.58 L2.50 5.83 L2.70 5.24 L3.20 4.87 L3.94 4.74 L4.79 4.79 L5.61 4.90 L6.29 4.95 L6.77 4.80 L7.06 4.39 L7.22 3.73 L7.37 2.91 L7.59 2.09 L7.94 1.43 L8.45 1.06 L9.07 1.06 L9.74 1.39 L10.40 1.93 L11.00 2.50 L11.53 2.94 L12.00 3.10 L12.47 2.94 L13.00 2.50 L13.60 1.93 L14.26 1.39 L14.93 1.06 L15.55 1.06 L16.06 1.43 L16.41 2.09 L16.63 2.91 L16.77 3.73 L16.94 4.39 L17.23 4.80 L17.71 4.95 L18.39 4.90 L19.21 4.79 L20.06 4.74 L20.80 4.87 L21.30 5.24 L21.50 5.83 L21.40 6.58 L21.09 7.37 L20.72 8.12 L20.47 8.75 L20.46 9.25 L20.76 9.65 L21.34 10.01 L22.07 10.40 L22.79 10.87 L23.31 11.41Z"/>
+                    <rect x="10.8" y="6.3" width="2.4" height="7.4" rx="1.2" fill="#fff"/>
+                    <circle cx="12" cy="16.9" r="1.35" fill="#fff"/>
+                </svg>
+
+            </span>
+
+            <input
+                class="code-input"
+                type="text"
+                name="access_code"
+                placeholder="НАДО ВВЕСТИ КОД…"
+                aria-label="Персональный код"
+                autocomplete="off"
+                autocapitalize="characters"
+                spellcheck="false"
+                required
+                {% if not show_welcome_modal %}autofocus{% endif %}
+            >
+
+        </div>
+
+        {% if login_error %}
+            <p class="login-error" role="alert">
+                {{ login_error }}
+            </p>
+        {% endif %}
+
+    </form>
+
+</main>
+
+<!-- ==============================
+     ФУТЕР
+============================== -->
+
+<footer>
+    <nav class="page-width footer-links" aria-label="Наши проекты">
+        <a href="#footer">tg-бот</a>
+        <a href="#footer">tg-канал</a>
+        <a href="#footer">Интерактивный атлас</a>
+    </nav>
+</footer>
+
+<!-- ==============================
+     ПРИВЕТСТВЕННОЕ ОКНО
+============================== -->
+
+{% if show_welcome_modal %}
+
+<div
+    class="modal-overlay"
+    id="welcome-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="welcome-title"
+>
+
+    <form
+        class="welcome"
+        id="mood-form"
+        method="post"
+        action="{% url 'save_mood' %}"
+    >
+
+        {% csrf_token %}
+
+        <input
+            type="hidden"
+            name="mood"
+            id="mood-input"
+            value="{{ student_mood }}"
+        >
+
+        <p class="welcome-title" id="welcome-title">
+            Добро<br>пожаловать,
+        </p>
+
+        <p class="welcome-name">
+            {{ student_name }}
+        </p>
+
+        <div class="mood-row">
+
+            <span>Сегодня я –</span>
+
+            <span class="mood-select">
+
+                <button
+                    class="mood-value"
+                    id="mood-value"
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                    aria-controls="mood-list"
+                >
+                    {{ student_mood }}
+                </button>
+
+                <div
+                    class="mood-list"
+                    id="mood-list"
+                    role="listbox"
+                    aria-label="Выбери свой статус"
+                    hidden
+                >
+
+                    {% for mood in moods %}
+
+                    <button
+                        class="mood-option"
+                        type="button"
+                        role="option"
+                        aria-selected="{% if mood == student_mood %}true{% else %}false{% endif %}"
+                    >
+                        {{ mood }}
+                    </button>
+
+                    {% endfor %}
+
+                </div>
+
+            </span>
+
+            <button
+                class="refresh"
+                id="mood-refresh"
+                type="button"
+                aria-label="Выбрать случайный статус"
+            >
+
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#000"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+
+                    <circle cx="12" cy="12" r="10.8"/>
+
+                    <g
+                        transform="translate(12 12) scale(.58) translate(-12 -12)"
+                        stroke-width="2.6"
+                    >
+                        <path d="M20 11a8 8 0 0 0-14.3-4.2L4 8.5"/>
+                        <path d="M4 4v4.5h4.5"/>
+                        <path d="M4 13a8 8 0 0 0 14.3 4.2L20 15.5"/>
+                        <path d="M20 20v-4.5h-4.5"/>
+                    </g>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+        <button
+            class="start-btn"
+            id="start-btn"
+            type="submit"
+        >
+            Стартуем
+        </button>
+
+    </form>
+
+</div>
+
+<script>
+
+(function () {
+
+    const moodValue = document.getElementById("mood-value");
+    const moodInput = document.getElementById("mood-input");
+    const moodList = document.getElementById("mood-list");
+    const refresh = document.getElementById("mood-refresh");
+
+    const options = Array.from(
+        moodList.querySelectorAll(".mood-option")
+    );
+
+    function setMood(mood) {
+
+        moodValue.textContent = mood;
+        moodInput.value = mood;
+
+        options.forEach(function (option) {
+
+            option.setAttribute(
+                "aria-selected",
+                String(option.textContent.trim() === mood)
+            );
+
+        });
+
+    }
+
+    function closeList() {
+
+        moodList.hidden = true;
+
+        moodValue.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+    }
+
+    moodValue.addEventListener("click", function (event) {
+
+        event.stopPropagation();
+
+        const open = moodList.hidden;
+
+        moodList.hidden = !open;
+
+        moodValue.setAttribute(
+            "aria-expanded",
+            String(open)
+        );
+
+        if (open) {
+
+            const current = options.find(function (option) {
+
+                return option.getAttribute("aria-selected") === "true";
+
+            });
+
+            (current || options[0]).focus();
+
+        }
+
+    });
+
+    options.forEach(function (option) {
+
+        option.addEventListener("click", function () {
+
+            setMood(option.textContent.trim());
+
+            closeList();
+
+            moodValue.focus();
+
+        });
+
+    });
+
+    moodList.addEventListener("keydown", function (event) {
+
+        const index = options.indexOf(document.activeElement);
+
+        if (event.key === "ArrowDown") {
+
+            event.preventDefault();
+
+            options[
+                Math.min(options.length - 1, index + 1)
+            ].focus();
+
+        }
+
+        if (event.key === "ArrowUp") {
+
+            event.preventDefault();
+
+            options[
+                Math.max(0, index - 1)
+            ].focus();
+
+        }
+
+    });
+
+    document.addEventListener("click", closeList);
+
+    document.addEventListener("keydown", function (event) {
+
+        if (event.key === "Escape" && !moodList.hidden) {
+
+            closeList();
+
+            moodValue.focus();
+
+        }
+
+    });
+
+    // Случайный статус, не повторяющий текущий
+
+    refresh.addEventListener("click", function () {
+
+        const moods = options.map(function (option) {
+
+            return option.textContent.trim();
+
+        });
+
+        const choices = moods.filter(function (mood) {
+
+            return mood !== moodInput.value;
+
+        });
+
+        if (choices.length) {
+
+            setMood(
+                choices[Math.floor(Math.random() * choices.length)]
+            );
+
+        }
+
+        refresh.classList.remove("is-rolling");
+
+        void refresh.offsetWidth;
+
+        refresh.classList.add("is-rolling");
+
+    });
+
+    document.getElementById("start-btn").focus();
+
+})();
+
+</script>
+
+{% endif %}
+
+</body>
+</html>

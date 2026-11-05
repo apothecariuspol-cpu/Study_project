@@ -1,0 +1,13 @@
+{% load static %}
+<aside class="side">
+    <a href="/" aria-label="На главную">
+        <img class="side-logo" src="{% static 'images/logo.svg' %}" alt="Логотип студии">
+    </a>
+    <nav class="side-nav" aria-label="Главное меню">
+        <a href="/" {% if active_page == "home" %}class="active" aria-current="page"{% endif %}>Главная</a>
+        <a href="{% url 'rubricator' %}" {% if active_page == "theory" %}class="active" aria-current="page"{% endif %}>Теория</a>
+        <a href="/practice/" {% if active_page == "practice" %}class="active" aria-current="page"{% endif %}>Практика</a>
+        <a href="{% url 'cabinet' %}" {% if active_page == "cabinet" %}class="active" aria-current="page"{% endif %}>Кабинет</a>
+        <a href="/about/" {% if active_page == "about" %}class="active" aria-current="page"{% endif %}>О нас</a>
+    </nav>
+</aside>
