@@ -29,6 +29,11 @@ urlpatterns = [
         views.generate_daily_plan,
         name="generate_daily_plan",
     ),
+    path(
+        "save-daily-plan-settings/",
+        views.save_daily_plan_settings,
+        name="save_daily_plan_settings",
+    ),
 
     path(
         "logout/",
