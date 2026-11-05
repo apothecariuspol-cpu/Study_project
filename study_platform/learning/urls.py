@@ -5,6 +5,7 @@ from . import views
 
 urlpatterns = [
     path("", views.subject_list, name="subject_list"),
+    path("collection-file/<int:file_id>/", views.download_teacher_collection_file, name="download_teacher_collection_file"),
 
     path(
         "save-mood/",
@@ -23,6 +24,11 @@ urlpatterns = [
         views.rubricator,
         name="rubricator",
     ),
+    path(
+        "generate-daily-plan/",
+        views.generate_daily_plan,
+        name="generate_daily_plan",
+    ),
 
     path(
         "logout/",
@@ -40,5 +46,15 @@ urlpatterns = [
         "lesson/<int:lesson_id>/",
         views.lesson_detail,
         name="lesson_detail",
+    ),
+    path(
+        "lesson/<int:lesson_id>/complete/",
+        views.complete_lesson,
+        name="complete_lesson",
+    ),
+    path(
+        "lesson/<int:lesson_id>/record-error/",
+        views.record_lesson_error,
+        name="record_lesson_error",
     ),
 ]

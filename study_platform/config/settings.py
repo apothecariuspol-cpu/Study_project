@@ -117,6 +117,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Загруженные преподавателем файлы хранятся отдельно от статических файлов.
+MEDIA_ROOT = BASE_DIR / 'media'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

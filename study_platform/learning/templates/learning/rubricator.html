@@ -614,7 +614,7 @@ footer {
 .plan-modal-window {
     position: relative;
     z-index: 1;
-    width: min(38rem, calc(100% - 2rem));
+    width: min(52rem, calc(100% - 2rem));
     max-height: calc(100vh - 5rem);
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -637,27 +637,35 @@ footer {
     background: #080808;
     border-radius: 0;
 }
-.plan-modal-close {
-    position: absolute;
-    top: 1rem;
-    right: 0;
-    border: 0;
-    background: transparent;
-    font-size: 1.8rem;
-    line-height: 1;
-    display: none;
-}
+
 .plan-modal-title {
     margin: 0 0 2rem;
     font-family: var(--font);
     font-size: 1.95rem;
     font-weight: 400;
     line-height: 1.2;
+    text-align: left;
 }
-.plan-quote {
+.plan-quote-button {
+    display: inline-block;
     margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #080808;
+    font: inherit;
     font-size: 1.05rem;
     line-height: 1.3;
+    text-align: left;
+    cursor: pointer;
+}
+.plan-quote-button:hover {
+    text-decoration: underline;
+    text-underline-offset: .2em;
+}
+.plan-quote-button:focus-visible {
+    outline: 2px solid #080808;
+    outline-offset: 4px;
 }
 .plan-quote-author {
     margin: .15rem 0 0;
@@ -667,18 +675,19 @@ footer {
 .plan-subjects {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.1rem 3.5rem;
+    gap: .8rem 2.5rem;
     margin-top: 2.1rem;
-    font-size: 1.35rem;
+    font-size: 13px;
 }
 .plan-subject {
     display: inline-flex;
     align-items: center;
-    gap: .8rem;
+    gap: .5rem;
+    font-size: 13px;
 }
 .plan-subject input {
-    width: 1.1rem;
-    height: 1.1rem;
+    width: .8rem;
+    height: .8rem;
     margin: 0;
     accent-color: #080808;
 }
@@ -766,6 +775,7 @@ footer {
 }
 .plan-progress {
     display: flex;
+    position: relative;
     width: 100%;
     height: 1.45rem;
     margin-top: .45rem;
@@ -778,8 +788,9 @@ footer {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    width: 38%;
-    padding-right: .5rem;
+    flex: 0 0 var(--base-width, 10%);
+    min-width: 2.5rem;
+    padding-right: .35rem;
     background: #080808;
     color: #fff;
     font-weight: 700;
@@ -788,7 +799,8 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 9%;
+    flex: 0 0 var(--change-width, 2%);
+    min-width: 2.7rem;
     background: #b9ffb7;
     border: 1px solid #080808;
 }
@@ -905,12 +917,13 @@ footer {
 
     .mood { font-size: 1.15rem; }
     .plan-modal { align-items: center; padding: .75rem .5rem; }
-    .plan-modal-window { width: min(34rem, calc(100% - 1.5rem)); max-height: calc(100vh - 1.5rem); padding: 1.5rem 1rem; }
-    .plan-modal-title { font-size: 1.5rem; margin-bottom: 1.25rem; }
-    .plan-quote { font-size: .9rem; }
+    .plan-modal-window { width: min(52rem, calc(100% - 1rem)); max-height: calc(100vh - 1.5rem); padding: 1.5rem 1rem; }
+    .plan-modal-title { font-size: 1.5rem; margin-bottom: 1.25rem; text-align: left; }
+    .plan-quote-button { font-size: .9rem; }
     .plan-quote-author { font-size: .8rem; }
-    .plan-subjects { margin-top: 1.7rem; gap: .8rem 1.5rem; font-size: 1.1rem; }
-    .plan-subject input { width: 1rem; height: 1rem; }
+    .plan-subjects { margin-top: 1.7rem; gap: .8rem 1.5rem; font-size: 13px; }
+    .plan-subject, .plan-subject input { font-size: 13px; }
+    .plan-subject input { width: .8rem; height: .8rem; }
     .plan-topics { margin-top: 2.2rem; gap: .7rem; }
     .plan-topic { grid-template-columns: 5.8rem minmax(0, 1fr); column-gap: .75rem; font-size: 1rem; }
     .plan-status { min-width: 5.8rem; min-height: 1.7rem; font-size: .7rem; }
@@ -1159,10 +1172,12 @@ footer {
 
 <div class="plan-modal" id="plan-modal" hidden>
     <div class="plan-modal-backdrop" data-close-plan></div>
-    <section class="plan-modal-window" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title">
-        <button class="plan-modal-close" type="button" aria-label="Закрыть окно" data-close-plan>×</button>
+    <section class="plan-modal-window" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title" tabindex="-1">
+        <div style="background:red;color:white;padding:10px;font-size:20px;margin-bottom:12px;">
+            ПРОВЕРКА НОВОГО ШАБЛОНА
+        </div>
         <h2 class="plan-modal-title" id="plan-modal-title">План на день</h2>
-        <p class="plan-quote">«Oh sh**! Here we go again.»</p>
+        <button class="plan-quote-button" type="submit" form="rubricator-form" name="action" value="choose" id="study-selected">Oh shit! Here we go again.</button>
         <p class="plan-quote-author">Джейсон Стетхем</p>
 
         <div class="plan-subjects" id="preview-subjects" aria-label="Выбранные предметы"></div>
@@ -1181,14 +1196,18 @@ footer {
 
         <div class="plan-changes">
             <h3 class="plan-changes-title">Ожидаемые изменения:</h3>
-            <div class="plan-progress"><span class="plan-progress-base">10%</span><span class="plan-progress-change">+2%</span><span class="plan-progress-label">Теория</span></div>
-            <div class="plan-progress"><span class="plan-progress-base" style="width:34%">8%</span><span class="plan-progress-change" style="width:13%">+12%</span><span class="plan-progress-label">Практика</span></div>
+            <div class="plan-progress" data-progress-kind="theory">
+                <span class="plan-progress-base" data-base="10" style="--base-width:10%">10%</span>
+                <span class="plan-progress-change" data-change="2" style="--change-width:2%">+2%</span>
+                <span class="plan-progress-label">Теория</span>
+            </div>
+            <div class="plan-progress" data-progress-kind="practice">
+                <span class="plan-progress-base" data-base="8" style="--base-width:8%">8%</span>
+                <span class="plan-progress-change" data-change="12" style="--change-width:12%">+12%</span>
+                <span class="plan-progress-label">Практика</span>
+            </div>
         </div>
 
-        <div class="plan-modal-actions">
-            <button class="action-button action-button--main" type="submit" form="rubricator-form" name="action" value="choose" id="study-selected">ИЗУЧИТЬ ВЫБРАННОЕ</button>
-            <button class="action-button" type="button" data-close-plan>НАЗАД К ПЛАНУ</button>
-        </div>
     </section>
 </div>
 
@@ -1324,8 +1343,8 @@ footer {
         if (!planModal) return;
         planModal.hidden = false;
         document.body.style.overflow = "hidden";
-        const closeButton = planModal.querySelector(".plan-modal-close");
-        if (closeButton) closeButton.focus();
+        const startButton = document.getElementById("study-selected");
+        if (startButton) startButton.focus();
     }
     function closePlan() {
         if (!planModal) return;
@@ -1336,7 +1355,6 @@ footer {
     document.getElementById("choose-plan")?.addEventListener("click", function () {
         if (studySelectedButton) {
             studySelectedButton.value = "choose";
-            studySelectedButton.textContent = "ИЗУЧИТЬ ВЫБРАННОЕ";
         }
         const checkedSubjects = form.querySelectorAll(".subject-filter:checked");
         if (!checkedSubjects.length) {
@@ -1356,6 +1374,7 @@ footer {
             return;
         }
         renderPlanPreview("choose");
+        updateExpectedChanges();
         openPlan();
     });
     document.getElementById("random-plan")?.addEventListener("click", function () {
@@ -1365,17 +1384,84 @@ footer {
         }
         if (studySelectedButton) {
             studySelectedButton.value = "random";
-            studySelectedButton.textContent = "СОБРАТЬ РАНДОМНЫЙ ПЛАН";
         }
         renderPlanPreview("random");
+        updateExpectedChanges();
         openPlan();
     });
     planModal?.querySelectorAll("[data-close-plan]").forEach(function (element) {
-        element.addEventListener("click", closePlan);
+        element.addEventListener("click", function (event) {
+            if (element.classList.contains("plan-modal-backdrop")) {
+                const dialog = planModal.querySelector(".plan-modal-window");
+                if (!dialog) return;
+                const rect = dialog.getBoundingClientRect();
+                const inDialogHeight = event.clientY >= rect.top && event.clientY <= rect.bottom;
+                const onLeftOrRight = event.clientX < rect.left || event.clientX > rect.right;
+                if (!(inDialogHeight && onLeftOrRight)) return;
+            }
+            closePlan();
+        });
     });
     document.addEventListener("keydown", function (event) {
         if (event.key === "Escape" && planModal && !planModal.hidden) closePlan();
     });
+    function countSelectedUnits() {
+        let total = 0;
+        const checkedSubjects = Array.from(form.querySelectorAll(".subject-filter:checked"));
+        checkedSubjects.forEach(function (subjectInput) {
+            const panel = Array.from(form.querySelectorAll(".subject-panel")).find(function (item) {
+                return item.dataset.subjectId === subjectInput.value;
+            });
+            if (!panel) return;
+            panel.querySelectorAll(".topic-item").forEach(function (topic) {
+                const topicChoice = topic.querySelector(":scope > .topic-heading .topic-master");
+                if (topicChoice && topicChoice.checked) {
+                    total += 1;
+                    return;
+                }
+                topic.querySelectorAll(":scope > .topic-children > .subtopic-item").forEach(function (lesson) {
+                    const lessonChoice = lesson.querySelector(":scope > .subtopic-heading .lesson-choice");
+                    if (lessonChoice && lessonChoice.checked) {
+                        total += 1;
+                        return;
+                    }
+                    total += lesson.querySelectorAll(".microtopic-choice:checked").length;
+                });
+            });
+        });
+        return total;
+    }
+
+    function updateExpectedChanges() {
+        if (!planModal) return;
+        const selectedUnits = countSelectedUnits();
+        const randomMode = studySelectedButton && studySelectedButton.value === "random";
+        const theoryUnits = selectedUnits || (randomMode ? Math.max(1, form.querySelectorAll(".subject-filter:checked").length) : 1);
+        const theoryBase = 10;
+        const theoryGain = Math.min(100 - theoryBase, theoryUnits * 2);
+
+        const taskTotal = Array.from(planModal.querySelectorAll(".plan-task-count")).reduce(function (sum, counter) {
+            return sum + Math.max(0, Number(counter.dataset.count || counter.textContent) || 0);
+        }, 0);
+        const practiceBase = 8;
+        const practiceGain = Math.min(100 - practiceBase, Math.round(taskTotal * 12 / 23));
+
+        [
+            { kind: "theory", base: theoryBase, gain: theoryGain },
+            { kind: "practice", base: practiceBase, gain: practiceGain }
+        ].forEach(function (item) {
+            const row = planModal.querySelector('[data-progress-kind="' + item.kind + '"]');
+            if (!row) return;
+            const base = row.querySelector(".plan-progress-base");
+            const change = row.querySelector(".plan-progress-change");
+            base.textContent = item.base + "%";
+            change.textContent = "+" + item.gain + "%";
+            base.style.setProperty("--base-width", item.base + "%");
+            change.style.setProperty("--change-width", item.gain + "%");
+            change.setAttribute("aria-label", "Прирост " + item.gain + " процентов");
+        });
+    }
+
     planModal?.querySelectorAll(".plan-task-controls button").forEach(function (button) {
         button.addEventListener("click", function () {
             const counter = button.closest(".plan-task").querySelector(".plan-task-count");
@@ -1383,15 +1469,21 @@ footer {
             const next = Math.max(0, current + Number(button.dataset.step));
             counter.dataset.count = String(next);
             counter.textContent = String(next);
+            updateExpectedChanges();
         });
     });
-    document.getElementById("study-selected")?.addEventListener("click", closePlan);
+    document.getElementById("study-selected")?.addEventListener("click", function () {
+        // Сохраняем текущий режим (выбор или рандом) перед отправкой формы.
+        if (studySelectedButton) studySelectedButton.value = studySelectedButton.value || "choose";
+    });
 
     function updateCount() {
         const active = form.querySelector(".subject-panel.is-active");
         const count = active ? active.querySelectorAll(
             ".topic-master:checked, .lesson-choice:checked, .microtopic-choice:checked"
         ).length : 0;
+        if (planModal && !planModal.hidden) updateExpectedChanges();
+        return count;
     }
 
     /*

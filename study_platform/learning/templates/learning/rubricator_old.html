@@ -709,6 +709,17 @@ footer {
     letter-spacing: .06em;
 }
 .plan-status--new { background: #b9ffb7; }
+.plan-topic-parent {
+    display: block;
+    margin-top: .12rem;
+    color: #888;
+    font-size: .78em;
+}
+.plan-preview-empty {
+    margin: 0;
+    color: #888;
+    font-size: .9rem;
+}
 .plan-task-list {
     display: grid;
     gap: .75rem;
@@ -1150,20 +1161,14 @@ footer {
     <div class="plan-modal-backdrop" data-close-plan></div>
     <section class="plan-modal-window" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title">
         <button class="plan-modal-close" type="button" aria-label="Закрыть окно" data-close-plan>×</button>
-        <h2 class="plan-modal-title" id="plan-modal-title">План 2 ноября</h2>
+        <h2 class="plan-modal-title" id="plan-modal-title">План на день</h2>
         <p class="plan-quote">«Oh sh**! Here we go again.»</p>
         <p class="plan-quote-author">Джейсон Стетхем</p>
 
-        <div class="plan-subjects" aria-label="Предметы">
-            <label class="plan-subject"><input type="checkbox" checked> История</label>
-            <label class="plan-subject"><input type="checkbox"> Общество</label>
-        </div>
+        <div class="plan-subjects" id="preview-subjects" aria-label="Выбранные предметы"></div>
 
-        <div class="plan-topics">
-            <div class="plan-topic"><span class="plan-status">ПОВТОР</span><span>Периоды российской истории</span></div>
-            <div class="plan-topic"><span class="plan-status">КОСЯК</span><span>Дмитрий Донской</span></div>
-            <div class="plan-topic"><span class="plan-status plan-status--new">НОВОЕ</span><span>Феодальная война в XV в.</span></div>
-            <div class="plan-topic"><span class="plan-status">КОСЯК</span><span>Иван III</span></div>
+        <div class="plan-topics" id="preview-topics" aria-live="polite">
+            <p class="plan-preview-empty">Здесь появятся выбранные темы.</p>
         </div>
 
         <div class="plan-task-list" aria-label="Количество заданий">
@@ -1215,8 +1220,106 @@ footer {
         }
     } catch (e) {}
 
-    // Временный переход к окну «План на день». Позже заменим его макетом.
+    // Окно предварительного просмотра показывает только текущий выбор из рубрикатора.
     const planModal = document.getElementById("plan-modal");
+    const previewSubjects = document.getElementById("preview-subjects");
+    const previewTopics = document.getElementById("preview-topics");
+
+    function addPreviewSubject(title) {
+        const label = document.createElement("label");
+        label.className = "plan-subject";
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = true;
+        checkbox.tabIndex = -1;
+        checkbox.setAttribute("aria-hidden", "true");
+        checkbox.addEventListener("click", function (event) { event.preventDefault(); });
+        const text = document.createElement("span");
+        text.textContent = title;
+        label.append(checkbox, text);
+        previewSubjects.appendChild(label);
+    }
+
+    function addPreviewTopic(title, parent) {
+        const row = document.createElement("div");
+        row.className = "plan-topic";
+        const status = document.createElement("span");
+        status.className = "plan-status";
+        status.textContent = "ВЫБРАНО";
+        const name = document.createElement("span");
+        name.textContent = title;
+        if (parent) {
+            const parentName = document.createElement("small");
+            parentName.className = "plan-topic-parent";
+            parentName.textContent = parent;
+            name.appendChild(parentName);
+        }
+        row.append(status, name);
+        previewTopics.appendChild(row);
+    }
+
+    function renderPlanPreview(mode) {
+        if (!previewSubjects || !previewTopics) return;
+        previewSubjects.replaceChildren();
+        previewTopics.replaceChildren();
+
+        const checkedSubjects = Array.from(form.querySelectorAll(".subject-filter:checked"));
+        checkedSubjects.forEach(function (subjectInput) {
+            const subjectLabel = subjectInput.closest(".subject-check");
+            addPreviewSubject(subjectLabel ? subjectLabel.textContent.trim() : "Предмет");
+
+            const panel = Array.from(form.querySelectorAll(".subject-panel")).find(function (item) {
+                return item.dataset.subjectId === subjectInput.value;
+            });
+            if (!panel || mode === "random") return;
+
+            panel.querySelectorAll(".topic-item").forEach(function (topic) {
+                const topicInput = topic.querySelector(":scope > .topic-heading .topic-master");
+                const topicTitle = topic.querySelector(":scope > .topic-heading .topic-title");
+                const topicSelected = Boolean(topicInput && topicInput.checked);
+                if (topicSelected) {
+                    addPreviewTopic(topicTitle ? topicTitle.textContent.trim() : "Тема", "");
+                    return;
+                }
+
+                topic.querySelectorAll(":scope > .topic-children > .subtopic-item").forEach(function (lesson) {
+                    const lessonInput = lesson.querySelector(":scope > .subtopic-heading .lesson-choice");
+                    const lessonTitle = lesson.querySelector(":scope > .subtopic-heading .subtopic-title");
+                    const lessonSelected = Boolean(lessonInput && lessonInput.checked);
+                    if (lessonSelected) {
+                        addPreviewTopic(
+                            lessonTitle ? lessonTitle.textContent.trim() : "Подтема",
+                            topicTitle ? topicTitle.textContent.trim() : ""
+                        );
+                        return;
+                    }
+
+                    lesson.querySelectorAll(".microtopic-choice:checked").forEach(function (microInput) {
+                        const microLabel = microInput.closest(".microtopic-check");
+                        const microTitle = microLabel ? microLabel.querySelector(".microtopic-title") : null;
+                        addPreviewTopic(
+                            microTitle ? microTitle.textContent.trim() : "Микротема",
+                            (topicTitle ? topicTitle.textContent.trim() : "") +
+                                (lessonTitle ? " / " + lessonTitle.textContent.trim() : "")
+                        );
+                    });
+                });
+            });
+        });
+
+        if (mode === "random") {
+            const note = document.createElement("p");
+            note.className = "plan-preview-empty";
+            note.textContent = "Случайный подбор будет сформирован после запуска.";
+            previewTopics.appendChild(note);
+        } else if (!previewTopics.children.length) {
+            const note = document.createElement("p");
+            note.className = "plan-preview-empty";
+            note.textContent = "В выбранных предметах пока нет отмеченных тем.";
+            previewTopics.appendChild(note);
+        }
+    }
+
     function openPlan() {
         if (!planModal) return;
         planModal.hidden = false;
@@ -1231,22 +1334,40 @@ footer {
     }
     const studySelectedButton = document.getElementById("study-selected");
     document.getElementById("choose-plan")?.addEventListener("click", function () {
-        if (studySelectedButton) { studySelectedButton.value = "choose"; studySelectedButton.textContent = "ИЗУЧИТЬ ВЫБРАННОЕ"; }
+        if (studySelectedButton) {
+            studySelectedButton.value = "choose";
+            studySelectedButton.textContent = "ИЗУЧИТЬ ВЫБРАННОЕ";
+        }
+        const checkedSubjects = form.querySelectorAll(".subject-filter:checked");
+        if (!checkedSubjects.length) {
+            alert("Сначала выбери предмет.");
+            return;
+        }
+        const hasAnySelection = Array.from(checkedSubjects).some(function (subjectInput) {
+            const panel = Array.from(form.querySelectorAll(".subject-panel")).find(function (item) {
+                return item.dataset.subjectId === subjectInput.value;
+            });
+            return Boolean(panel && panel.querySelector(
+                ".topic-master:checked, .lesson-choice:checked, .microtopic-choice:checked"
+            ));
+        });
+        if (!hasAnySelection) {
+            alert("Отметь хотя бы одну тему, подтему или микротему.");
+            return;
+        }
+        renderPlanPreview("choose");
+        openPlan();
+    });
+    document.getElementById("random-plan")?.addEventListener("click", function () {
         if (!form.querySelector(".subject-filter:checked")) {
             alert("Сначала выбери предмет.");
             return;
         }
-        const active = form.querySelector(".subject-panel.is-active");
-        if (!active || !active.querySelector(
-            ".topic-master:checked, .lesson-choice:checked, .microtopic-choice:checked"
-        )) {
-            alert("Отметь хотя бы одну тему, подтему или микротему.");
-            return;
+        if (studySelectedButton) {
+            studySelectedButton.value = "random";
+            studySelectedButton.textContent = "СОБРАТЬ РАНДОМНЫЙ ПЛАН";
         }
-        openPlan();
-    });
-    document.getElementById("random-plan")?.addEventListener("click", function () {
-        if (studySelectedButton) { studySelectedButton.value = "random"; studySelectedButton.textContent = "СОБРАТЬ РАНДОМНЫЙ ПЛАН"; }
+        renderPlanPreview("random");
         openPlan();
     });
     planModal?.querySelectorAll("[data-close-plan]").forEach(function (element) {

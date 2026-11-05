@@ -185,6 +185,17 @@
             <article class="lesson-content">
                 {{ lesson.content|linebreaks }}
             </article>
+
+            {% if progress and not progress.is_completed %}
+            <form method="post" action="{% url 'complete_lesson' lesson.id %}" style="margin-top: 42px;">
+                {% csrf_token %}
+                <button type="submit" style="border: 0; background: #d7ff38; color: #171717; padding: 14px 22px; font: inherit; font-weight: 700; cursor: pointer;">
+                    Отметить урок завершённым
+                </button>
+            </form>
+            {% elif progress and progress.is_completed %}
+            <p style="margin-top: 42px; font-weight: 700;">Урок завершён</p>
+            {% endif %}
         </div>
     </main>
 

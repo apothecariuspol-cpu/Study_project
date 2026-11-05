@@ -3,12 +3,15 @@ import hashlib
 import hmac
 
 from django.conf import settings
+from django.db import models
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, Http404
+from django.utils import timezone
+from datetime import timedelta
 from django.views.decorators.http import require_POST
 
-from .models import Subject, Topic, Lesson, MicroTopic, StudentAccess
+from .models import Subject, Topic, Lesson, MicroTopic, Student, StudentAccess, StudentLessonProgress, StudentBestResult, TeacherCollectionFile, TeacherCollection
 
 
 MOODS = [
@@ -35,6 +38,139 @@ def _session_ids(values):
             continue
     return result
 
+
+
+def _current_student(request):
+    """Возвращает активного ученика из текущей сессии."""
+    student_id = request.session.get("student_id")
+    if not student_id:
+        return None
+    return Student.objects.filter(
+        id=student_id,
+        access__is_active=True,
+    ).first()
+
+
+def _ordered_student_lessons(student, subject):
+    return list(
+        Lesson.objects.filter(
+            topic__subject=subject,
+            topic__subject__students=student,
+            is_published=True,
+        ).select_related("topic", "topic__subject").order_by(
+            "topic__order", "topic_id", "order", "id"
+        )
+    )
+
+
+def generate_daily_lessons(student, subject, count=3):
+    """Подбирает уроки по четырём согласованным приоритетам."""
+    try:
+        count = max(1, min(20, int(count)))
+    except (TypeError, ValueError):
+        count = 3
+
+    lessons = _ordered_student_lessons(student, subject)
+    if not lessons:
+        return []
+
+    progress_rows = {
+        row.lesson_id: row
+        for row in StudentLessonProgress.objects.filter(
+            student=student, lesson__in=lessons
+        )
+    }
+    positions = {lesson.id: index for index, lesson in enumerate(lessons)}
+    latest = max(
+        (row for row in progress_rows.values() if row.last_worked_at),
+        key=lambda row: row.last_worked_at,
+        default=None,
+    )
+
+    # Приоритет 1: последовательное движение по рубрикатору после
+    # последнего урока, с переходом к началу, если дошли до конца.
+    start_index = positions.get(latest.lesson_id, -1) + 1 if latest else 0
+    sequence = lessons[start_index:] + lessons[:start_index]
+    priority_one = [
+        lesson for lesson in sequence
+        if not progress_rows.get(lesson.id) or not progress_rows[lesson.id].is_completed
+    ]
+
+    # Приоритет 2: уроки с ошибками, сначала те, где ошибок больше.
+    priority_two = sorted(
+        [lesson for lesson in lessons if progress_rows.get(lesson.id)
+         and progress_rows[lesson.id].error_count > 0],
+        key=lambda lesson: (
+            -progress_rows[lesson.id].error_count,
+            progress_rows[lesson.id].last_worked_at.timestamp() if progress_rows[lesson.id].last_worked_at else 0,
+        ),
+    )
+
+    # Приоритет 3: начатые, но ещё не завершённые уроки.
+    priority_three = sorted(
+        [lesson for lesson in lessons if progress_rows.get(lesson.id)
+         and progress_rows[lesson.id].is_started
+         and not progress_rows[lesson.id].is_completed],
+        key=lambda lesson: progress_rows[lesson.id].last_worked_at or timezone.now(),
+    )
+
+    # Приоритет 4: особые блоки возвращаются в план не чаще раза в неделю.
+    recommendation_limit = timezone.now() - timedelta(days=7)
+    priority_four = [
+        lesson for lesson in lessons
+        if lesson.special_category in ("culture", "maps")
+        and (
+            not progress_rows.get(lesson.id)
+            or not progress_rows[lesson.id].last_recommended_at
+            or progress_rows[lesson.id].last_recommended_at <= recommendation_limit
+        )
+    ]
+    priority_four.sort(key=lambda lesson: (
+        progress_rows[lesson.id].last_recommended_at.timestamp()
+        if progress_rows.get(lesson.id) and progress_rows[lesson.id].last_recommended_at
+        else 0,
+        positions[lesson.id],
+    ))
+
+    chosen = []
+    chosen_ids = set()
+
+    def add_from(items, limit=None):
+        for lesson in items:
+            if lesson.id in chosen_ids:
+                continue
+            if limit is not None and len(chosen) >= limit:
+                break
+            chosen.append(lesson)
+            chosen_ids.add(lesson.id)
+
+    # Если есть давно не рекомендованный особый блок, оставляем ему
+    # одно место в плане, чтобы он не вытеснялся бесконечно обычными уроками.
+    special_lesson = next((lesson for lesson in priority_four), None)
+    regular_limit = count - 1 if special_lesson else count
+    # Сначала берём ближайший следующий урок, затем работу над ошибками
+    # и незавершённые уроки. Остальные последовательные уроки — для заполнения.
+    add_from(priority_one[:1], regular_limit)
+    add_from(priority_two, regular_limit)
+    add_from(priority_three, regular_limit)
+
+    if special_lesson and len(chosen) < count:
+        chosen.append(special_lesson)
+        chosen_ids.add(special_lesson.id)
+        progress, _ = StudentLessonProgress.objects.get_or_create(
+            student=student, lesson=special_lesson
+        )
+        progress.last_recommended_at = timezone.now()
+        progress.save(update_fields=["last_recommended_at"])
+
+    # Заполняем оставшиеся места последовательными уроками, затем прочими
+    # особыми блоками, если они ещё не попали в план.
+    add_from(priority_one[1:])
+    add_from(priority_two)
+    add_from(priority_three)
+    add_from(priority_four)
+
+    return chosen[:count]
 
 
 @require_POST
@@ -188,6 +324,46 @@ def cabinet(request):
             tab["subject_id"] = subject.id
             tabs.append(tab)
 
+    # Динамический счётчик ошибок и сохранённый лучший результат —
+    # строго в рамках текущего ученика и конкретного предмета.
+    for tab in tabs:
+        subject = next(item for item in student_subjects if item.id == tab["subject_id"])
+        tab["assignments"] = (
+            TeacherCollection.objects
+            .filter(is_active=True, students=student)
+            .filter(models.Q(subject__isnull=True) | models.Q(subject=subject))
+            .prefetch_related("materials")
+            .distinct()
+        )
+        error_rows = list(
+            StudentLessonProgress.objects
+            .filter(
+                student=student,
+                lesson__topic__subject=subject,
+                error_count__gt=0,
+            )
+            .select_related("lesson")
+            .order_by("-error_count", "-last_worked_at", "lesson__order", "lesson_id")[:5]
+        )
+        max_errors = max((row.error_count for row in error_rows), default=0)
+        tab["mistakes"] = [
+            {
+                "title": row.lesson.title,
+                "error_count": row.error_count,
+                "bar_percent": round(row.error_count / max_errors * 100) if max_errors else 0,
+            }
+            for row in error_rows
+        ]
+
+        best = StudentBestResult.objects.filter(student=student, subject=subject).first()
+        if best:
+            tab["metrics"] = {
+                "best_date": f"{best.best_date.day} {['', 'января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'][best.best_date.month]}",
+                "topics": f"{best.theory_topics} тем",
+                "exercises": f"{best.practice_exercises} упражнений",
+                "correct": f"{best.correct_answers} верно",
+            }
+
     # Берём сохранённый выбор из рубрикатора и повторно проверяем,
     # что все ID относятся к предметам текущего ученика.
     selection = request.session.get("rubricator_selection", {})
@@ -285,7 +461,7 @@ def cabinet(request):
         "tabs": tabs,
         "daily_plan_subjects": daily_plan_subjects,
         "has_rubricator_selection": bool(selection),
-        "rubricator_selection_mode": selection.get("mode", ""),
+        "rubricator_selection_mode": selection.get("mode") or "auto",
     }
 
     return render(request, "learning/cabinet.html", context)
@@ -397,6 +573,33 @@ def rubricator(request):
     return render(request, "learning/rubricator.html", context)
 
 
+@require_POST
+def generate_daily_plan(request):
+    """Возвращает персонально подобранные уроки для выбранного предмета."""
+    student = _current_student(request)
+    if not student:
+        return JsonResponse({"ok": False, "error": "Необходим вход."}, status=403)
+
+    try:
+        subject_id = int(request.POST.get("subject_id", ""))
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "error": "Не указан предмет."}, status=400)
+
+    subject = student.subjects.filter(id=subject_id).first()
+    if not subject:
+        return JsonResponse({"ok": False, "error": "Предмет недоступен."}, status=404)
+
+    lessons = generate_daily_lessons(student, subject, request.POST.get("count", 3))
+    return JsonResponse({
+        "ok": True,
+        "items": [
+            {"title": lesson.title, "parent": lesson.topic.title,
+             "url": f"/lesson/{lesson.id}/"}
+            for lesson in lessons
+        ],
+    })
+
+
 def logout_student(request):
     """Выход ученика из личного кабинета."""
 
@@ -419,14 +622,114 @@ def topic_list(request, subject_id):
 
 
 def lesson_detail(request, lesson_id):
-    lesson = get_object_or_404(
-        Lesson,
-        id=lesson_id,
-        is_published=True,
-    )
+    lesson = get_object_or_404(Lesson, id=lesson_id, is_published=True)
+    student = _current_student(request)
+    progress = None
+
+    if student and student.subjects.filter(id=lesson.topic.subject_id).exists():
+        progress, created = StudentLessonProgress.objects.get_or_create(
+            student=student,
+            lesson=lesson,
+            defaults={
+                "is_started": True,
+                "first_started_at": timezone.now(),
+                "last_worked_at": timezone.now(),
+            },
+        )
+        if not created:
+            progress.is_started = True
+            if not progress.first_started_at:
+                progress.first_started_at = timezone.now()
+            progress.last_worked_at = timezone.now()
+            progress.save(update_fields=["is_started", "first_started_at", "last_worked_at"])
 
     return render(
         request,
         "learning/lesson_detail.html",
-        {"lesson": lesson},
+        {"lesson": lesson, "progress": progress},
     )
+
+
+@require_POST
+def complete_lesson(request, lesson_id):
+    student = _current_student(request)
+    if not student:
+        return redirect("subject_list")
+
+    lesson = get_object_or_404(
+        Lesson,
+        id=lesson_id,
+        is_published=True,
+        topic__subject__students=student,
+    )
+    now = timezone.now()
+    progress, _ = StudentLessonProgress.objects.get_or_create(
+        student=student,
+        lesson=lesson,
+        defaults={"is_started": True, "first_started_at": now},
+    )
+    progress.is_started = True
+    progress.is_completed = True
+    progress.completed_at = now
+    progress.last_worked_at = now
+    if not progress.first_started_at:
+        progress.first_started_at = now
+    progress.save(update_fields=[
+        "is_started", "is_completed", "completed_at",
+        "first_started_at", "last_worked_at",
+    ])
+    messages.success(request, "Урок отмечен как завершённый.")
+    return redirect("lesson_detail", lesson_id=lesson.id)
+
+
+@require_POST
+def record_lesson_error(request, lesson_id):
+    """Точка интеграции для тренажёра: увеличивает счётчик ошибок по уроку."""
+    student = _current_student(request)
+    if not student:
+        return JsonResponse({"ok": False, "error": "Необходим вход."}, status=403)
+
+    lesson = get_object_or_404(
+        Lesson,
+        id=lesson_id,
+        is_published=True,
+        topic__subject__students=student,
+    )
+    now = timezone.now()
+    progress, _ = StudentLessonProgress.objects.get_or_create(
+        student=student,
+        lesson=lesson,
+        defaults={"is_started": True, "first_started_at": now},
+    )
+    progress.is_started = True
+    progress.error_count += 1
+    progress.last_worked_at = now
+    progress.save(update_fields=["is_started", "error_count", "last_worked_at"])
+    return JsonResponse({"ok": True, "error_count": progress.error_count})
+
+
+def download_teacher_collection_file(request, file_id):
+    """Отдаёт файл только ученику, которому назначена подборка."""
+    student_id = request.session.get("student_id")
+    if not student_id:
+        raise Http404
+
+    access = StudentAccess.objects.filter(
+        student_id=student_id, is_active=True
+    ).first()
+    if access is None:
+        raise Http404
+
+    material = get_object_or_404(
+        TeacherCollectionFile.objects.select_related("collection"),
+        pk=file_id,
+        collection__is_active=True,
+        collection__students=access.student,
+    )
+    try:
+        file_handle = material.file.open("rb")
+    except (FileNotFoundError, OSError, ValueError):
+        raise Http404("Файл не найден")
+
+    filename = material.file.name.rsplit("/", 1)[-1]
+    return FileResponse(file_handle, as_attachment=True, filename=filename)

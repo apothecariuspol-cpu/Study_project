@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 
-from .models import Subject, Topic, Lesson, MicroTopic, Student, StudentAccess
+from .models import Subject, Topic, Lesson, MicroTopic, Student, StudentAccess, StudentLessonProgress, StudentBestResult, TeacherCollection, TeacherCollectionFile
 
 
 class StudentAccessForm(forms.ModelForm):
@@ -111,10 +111,14 @@ class TopicAdmin(admin.ModelAdmin):
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
-    list_display = ("title", "topic", "completion_percent", "is_published", "order")
-    list_filter = ("is_published", "topic__subject", "topic")
+    list_display = ("title", "topic", "special_category", "completion_percent", "is_published", "order")
+    list_filter = ("is_published", "special_category", "topic__subject", "topic")
     search_fields = ("title", "description", "content")
     list_editable = ("completion_percent", "is_published", "order")
+    fieldsets = (
+        ("Основное", {"fields": ("topic", "title", "description", "content", "special_category", "order", "is_published")}),
+        ("Показатели", {"fields": ("completion_percent",)}),
+    )
 
 
 @admin.register(MicroTopic)
@@ -124,3 +128,42 @@ class MicroTopicAdmin(admin.ModelAdmin):
     search_fields = ("title", "lesson__title")
     list_editable = ("completion_percent", "is_published", "order")
     autocomplete_fields = ("lesson",)
+
+
+@admin.register(StudentLessonProgress)
+class StudentLessonProgressAdmin(admin.ModelAdmin):
+    list_display = ("student", "lesson", "is_started", "is_completed", "error_count", "last_worked_at")
+    list_filter = ("is_started", "is_completed", "lesson__topic__subject")
+    search_fields = ("student__name", "lesson__title", "lesson__topic__title")
+    readonly_fields = ("first_started_at", "last_worked_at", "completed_at", "last_recommended_at")
+
+
+@admin.register(StudentBestResult)
+class StudentBestResultAdmin(admin.ModelAdmin):
+    list_display = ("student", "subject", "best_date", "theory_topics", "practice_exercises", "correct_answers")
+    list_filter = ("subject", "best_date", "student__is_demo")
+    search_fields = ("student__name", "subject__title")
+    autocomplete_fields = ("student", "subject")
+
+
+class TeacherCollectionFileInline(admin.TabularInline):
+    model = TeacherCollectionFile
+    extra = 1
+    fields = ("file", "description", "order")
+
+
+@admin.register(TeacherCollection)
+class TeacherCollectionAdmin(admin.ModelAdmin):
+    list_display = ("title", "subject", "is_active", "assigned_students_count", "updated_at")
+    list_filter = ("is_active", "subject")
+    search_fields = ("title", "description", "students__name")
+    filter_horizontal = ("students",)
+    inlines = (TeacherCollectionFileInline,)
+    fieldsets = (
+        ("Подборка", {"fields": ("title", "description", "subject", "is_active")}),
+        ("Кому назначить", {"fields": ("students",)}),
+    )
+
+    @admin.display(description="Назначено ученикам")
+    def assigned_students_count(self, obj):
+        return obj.students.count()

@@ -812,24 +812,13 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                         {% for a in tab.assignments %}
                         <li class="collection is-open">
                             <button class="collection-toggle" type="button" aria-expanded="true">{{ a.title }}<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
-                            <div class="assign-meta"><span>Практика</span><b>{{ a.practice|default:a.due|default:"Подборка" }}</b></div>
-                            {% if a.cards_url %}<div class="assign-meta"><span>Карточки</span><b><a href="{{ a.cards_url }}">Скачать (pdf)</a></b></div>{% endif %}
+                            {% if a.description %}<div class="assign-meta"><span>Описание</span><b>{{ a.description|linebreaksbr }}</b></div>{% endif %}
+                            {% for material in a.materials.all %}
+                            <div class="assign-meta"><span>Файл</span><b><a href="{% url 'download_teacher_collection_file' material.id %}">{% if material.description %}{{ material.description }}{% else %}Скачать файл {{ forloop.counter }}{% endif %}</a></b></div>
+                            {% endfor %}
                         </li>
                         {% empty %}
-                        {% if student.is_demo %}
-                        <li class="collection is-open">
-                            <button class="collection-toggle" type="button" aria-expanded="true">Культура XVIII века<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
-                            <div class="assign-meta"><span>Практика</span><b>12 упражнений</b></div>
-                            <div class="assign-meta"><span>Карточки</span><b>Скачать (pdf)</b></div>
-                        </li>
-                        <li class="collection is-open">
-                            <button class="collection-toggle" type="button" aria-expanded="true">Персоны X-XIII веков<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
-                            <div class="assign-meta"><span>Практика</span><b>12 упражнений</b></div>
-                            <div class="assign-meta"><span>Карточки</span><b>Скачать (pdf)</b></div>
-                        </li>
-                        {% else %}
                         <li class="empty">Подборок пока нет</li>
-                        {% endif %}
                         {% endfor %}
                     </ul>
                 </section>
@@ -876,22 +865,15 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                         {% for item in tab.mistakes %}
                         <li>
                             <span class="mistake-name">{{ item.title }}</span>
-                            {% if item.accuracy is not None %}
-                            <div class="mini-track"><i style="width:{{ item.accuracy|unlocalize }}%"></i></div>
-                            <small>{{ item.accuracy }}% верно</small>
-                            {% endif %}
+                            <div class="mini-track"><i style="width:{{ item.bar_percent|unlocalize }}%"></i></div>
+                            <small>{{ item.error_count }} ошибок</small>
                         </li>
                         {% empty %}
-                        {% if student.is_demo %}
-                        <li><span class="mistake-name">Дмитрий Донской</span><div class="mini-track"><i style="width:42%"></i></div><small>42% верно</small></li>
-                        <li><span class="mistake-name">Иван III</span><div class="mini-track"><i style="width:27%"></i></div><small>27% верно</small></li>
-                        {% else %}
                         <li class="empty">Пока косяков нет</li>
-                        {% endif %}
                         {% endfor %}
                     </ul>
 
-                    {% if tab.mistakes or student.is_demo %}
+                    {% if tab.mistakes %}
                     <div class="section-action-icons">
                         <span>Исправим?</span>
                         <a class="status-icon status-icon--yes hint-tip" data-tip="Включим эту тему в твой план" tabindex="0" href="/practice/?subject={{ tab.key }}&amp;mode=mistakes" aria-label="Исправить ошибки"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.2 6.5 11l6.3-6.5"/></svg></a>
@@ -978,7 +960,7 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 </div>
 {% endif %}
 
-<div class="daily-plan-overlay" id="daily-plan-overlay" data-has-selection="{% if has_rubricator_selection %}true{% else %}false{% endif %}" hidden>
+<div class="daily-plan-overlay" id="daily-plan-overlay" data-has-selection="{% if has_rubricator_selection %}true{% else %}false{% endif %}" data-mode="{{ rubricator_selection_mode }}" data-generate-url="{% url 'generate_daily_plan' %}" data-csrf="{{ csrf_token }}" hidden>
     <section class="daily-plan-modal" role="dialog" aria-modal="true" aria-labelledby="daily-plan-title">
         <button class="daily-plan-close" type="button" aria-label="Закрыть план">&times;</button>
         <h2 class="daily-plan-title" id="daily-plan-title">План <span id="daily-plan-date"></span></h2>
@@ -1002,13 +984,13 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
             <div class="daily-plan-subject-group" data-subject-id="{{ plan_subject.id }}" {% if not plan_subject.is_selected %}hidden{% endif %}>
                 {% for item in plan_subject.items %}
                 <div class="daily-plan-topic">
-                    <span>{{ item.title }}</span>
+                    {% if item.url %}<a href="{{ item.url }}">{{ item.title }}</a>{% else %}<span>{{ item.title }}</span>{% endif %}
                     {% if item.parent %}<small>{{ item.parent }}</small>{% endif %}
                 </div>
                 {% empty %}
                 <div class="daily-plan-empty">
-                    {% if rubricator_selection_mode == "random" %}
-                        Для этого предмета сохранён случайный подбор. Состав плана подключим следующим этапом.
+                    {% if rubricator_selection_mode == "random" or rubricator_selection_mode == "auto" %}
+                        Подбираем уроки для плана…
                     {% elif has_rubricator_selection %}
                         Для этого предмета пока нет выбранных тем.
                     {% else %}
@@ -1319,26 +1301,13 @@ function initChart(panel) {
     render();
 }
 
-/* ЗАПУСК И ДЕМОПОКАЗАТЕЛИ (значения как в макете) */
-function makeDemoMetrics() {
-    const today = new Date();
-    const daysAgo = Math.floor(Math.random() * 24) + 1;
-    const bestDate = new Date(today);
-    bestDate.setDate(today.getDate() - daysAgo);
-    const topics = Math.floor(Math.random() * 5) + 3;
-    const exercises = Math.floor(Math.random() * 31) + 25;
-    const correct = Math.min(exercises, Math.floor(exercises * (0.68 + Math.random() * 0.2)));
-    return {
-        best_date: bestDate.toLocaleDateString("ru-RU", { day: "numeric", month: "long" }),
-        topics: topics + " тем",
-        exercises: exercises + " упражнений",
-        correct: correct + " верно",
-        readiness: (Math.floor(Math.random() * 18) + 28) + "%",
-        codifier_done: String(Math.floor(Math.random() * 4) + 7),
-        codifier_total: "24"
-    };
-}
-const DEMO_METRICS = makeDemoMetrics();
+/* ЗАПУСК И ДЕМОПОКАЗАТЕЛИ.
+   Лучший результат приходит из базы данных и не генерируется случайно в браузере. */
+const DEMO_METRICS = {
+    readiness: "—",
+    codifier_done: "—",
+    codifier_total: "24"
+};
 
 document.querySelectorAll(".subject-panel").forEach(function (panel) {
     initChart(panel);
@@ -1378,8 +1347,65 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
         });
     }
 
+    function getCookie(name) {
+        const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
+        return match ? decodeURIComponent(match[2]) : "";
+    }
+
+    async function loadGeneratedGroup(subjectId) {
+        const group = subjectGroups.find(function (item) { return item.dataset.subjectId === String(subjectId); });
+        if (!group) return;
+        const panel = document.querySelector('.subject-panel[data-subject-id="' + subjectId + '"]');
+        const countInput = panel ? panel.querySelector(".plan-row .stepper-value") : null;
+        const count = countInput ? countInput.value : "3";
+        group.innerHTML = '<div class="daily-plan-empty">Подбираем уроки…</div>';
+        const body = new URLSearchParams({ subject_id: subjectId, count: count });
+        try {
+            const response = await fetch(overlay.dataset.generateUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                    "X-CSRFToken": overlay.dataset.csrf || getCookie("csrftoken"),
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: body.toString()
+            });
+            const data = await response.json();
+            if (!response.ok || !data.ok) throw new Error(data.error || "Не удалось составить план.");
+            group.replaceChildren();
+            if (!data.items.length) {
+                const empty = document.createElement("div");
+                empty.className = "daily-plan-empty";
+                empty.textContent = "Нет доступных опубликованных уроков для подбора.";
+                group.appendChild(empty);
+                return;
+            }
+            data.items.forEach(function (item) {
+                const wrapper = document.createElement("div");
+                wrapper.className = "daily-plan-topic";
+                const link = document.createElement("a");
+                link.href = item.url;
+                link.textContent = item.title;
+                wrapper.appendChild(link);
+                if (item.parent) {
+                    const parent = document.createElement("small");
+                    parent.textContent = item.parent;
+                    wrapper.appendChild(parent);
+                }
+                group.appendChild(wrapper);
+            });
+        } catch (error) {
+            group.innerHTML = '<div class="daily-plan-empty">Не удалось загрузить план. Закрой окно и попробуй ещё раз.</div>';
+        }
+    }
+
     subjectChoices.forEach(function (choice) {
-        choice.addEventListener("change", updatePlanTopics);
+        choice.addEventListener("change", function () {
+            updatePlanTopics();
+            if (overlay.dataset.mode === "auto" || overlay.dataset.mode === "random") {
+                if (choice.checked) loadGeneratedGroup(choice.value);
+            }
+        });
     });
 
     function openPlan(button) {
@@ -1397,6 +1423,11 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
         }
 
         updatePlanTopics();
+        if (overlay.dataset.mode === "auto" || overlay.dataset.mode === "random") {
+            subjectChoices.filter(function (choice) { return choice.checked; }).forEach(function (choice) {
+                loadGeneratedGroup(choice.value);
+            });
+        }
         overlay.hidden = false;
         document.body.style.overflow = "hidden";
         closeButton.focus();
