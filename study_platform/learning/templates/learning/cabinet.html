@@ -1399,7 +1399,7 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
         if (!group) return;
         const panel = document.querySelector('.subject-panel[data-subject-id="' + subjectId + '"]');
         const countInput = panel ? panel.querySelector(".plan-row .stepper-value") : null;
-        const count = countInput ? countInput.value : "3";
+        const count = countInput ? countInput.value : "0";
         group.innerHTML = '<div class="daily-plan-empty">Подбираем уроки…</div>';
         const body = new URLSearchParams({
             subject_id: subjectId,
