@@ -103,14 +103,14 @@ def generate_daily_lessons(student, subject, count=3, mode="auto"):
         new_lessons = chooser(new_lessons)
     else:
         unfinished.sort(key=lambda lesson: (
-            progress_rows[lesson.id].last_worked_at or timezone.make_aware(
-                timezone.datetime.min
-            ),
+            progress_rows[lesson.id].last_worked_at.timestamp()
+            if progress_rows[lesson.id].last_worked_at else 0,
             lesson.topic.order, lesson.order, lesson.id,
         ))
         with_errors.sort(key=lambda lesson: (
             -progress_rows[lesson.id].error_count,
-            progress_rows[lesson.id].last_worked_at or timezone.now(),
+            progress_rows[lesson.id].last_worked_at.timestamp()
+            if progress_rows[lesson.id].last_worked_at else 0,
             lesson.topic.order, lesson.order, lesson.id,
         ))
 
@@ -481,6 +481,15 @@ def rubricator(request):
         "selected_topic_ids": selected_topic_ids,
         "selected_lesson_ids": selected_lesson_ids,
         "selected_microtopic_ids": selected_microtopic_ids,
+        "plan_theory_counts": {
+            str(subject.id): int(
+                _student_plan_settings(request).get(str(subject.id), {}).get(
+                    "theory", 3 if "истор" in subject.title.lower() else 2 if "общ" in subject.title.lower() else 3
+                )
+            )
+            for subject in subjects
+        },
+        "generate_plan_url": "generate_daily_plan",
     }
     return render(request, "learning/rubricator.html", context)
 
