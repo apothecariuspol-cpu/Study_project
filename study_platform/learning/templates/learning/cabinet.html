@@ -804,6 +804,21 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 @media(max-width:600px) { .plan-task, .daily-plan-task { grid-template-columns:42% auto; } }
 
 
+/* Точечные правки поп-апа на странице «Кабинет». */
+.daily-plan-subjects,
+.daily-plan-subjects .check { font-size:16px; }
+.daily-plan-topics,
+.daily-plan-topic,
+.daily-plan-task { font-size:16px; }
+.daily-plan-task .plan-task-count { font-size:16px; }
+.daily-plan-changes { top:550px; }
+.daily-plan-changes-title { font-size:16px; }
+.daily-plan-quote { top:689px; font-size:16px; }
+@media(max-width:600px) {
+ .daily-plan-changes { top:67.1%; }
+ .daily-plan-quote { top:84.1%; }
+}
+
 /* Уточнение селекторов после перестановки элементов счётчика. */
 .daily-plan-subjects input {
  position:absolute; width:1px; height:1px; opacity:0; margin:0;
@@ -1199,8 +1214,6 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
             </div>
             {% endfor %}
         </div>
-
-        <hr class="daily-plan-divider">
 
         <div class="daily-plan-task-list" aria-label="Количество заданий">
             <div class="daily-plan-task"><span class="plan-task-label">Карты</span><span class="plan-task-controls"><button type="button" data-step="-1" aria-label="Уменьшить карты"><img src="{% static 'learning/icons/Vector_left.svg' %}" alt=""></button><span class="plan-task-count" data-count="2">2</span><button type="button" data-step="1" aria-label="Увеличить карты"><img src="{% static 'learning/icons/Vector_right.svg' %}" alt=""></button></span></div>
