@@ -2,6 +2,7 @@
 import hashlib
 import hmac
 import random
+import json
 
 from django.conf import settings
 from django.db import models
@@ -11,7 +12,7 @@ from django.http import JsonResponse, FileResponse, Http404
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .models import Subject, Topic, Lesson, MicroTopic, Student, StudentAccess, StudentLessonProgress, StudentBestResult, TeacherCollectionFile, TeacherCollection
+from .models import Subject, Topic, Lesson, MicroTopic, Student, StudentAccess, StudentLessonProgress, StudentTopicActivity, StudentBestResult, TeacherCollectionFile, TeacherCollection
 
 
 MOODS = [
@@ -473,6 +474,59 @@ def rubricator(request):
         for subject in subjects
     }
 
+    # Статусы тем рассчитываются по фактическому прогрессу текущего ученика.
+    topic_list = [topic for subject in subjects for topic in subject.topics.all()]
+    lesson_progress = {
+        row["lesson_id"]: row
+        for row in StudentLessonProgress.objects.filter(
+            student=student,
+            lesson__topic__in=topic_list,
+            lesson__is_published=True,
+        ).values("lesson_id", "is_started", "is_completed")
+    }
+    for topic in topic_list:
+        published_lessons = [
+            lesson for lesson in topic.lessons.all() if lesson.is_published
+        ]
+        states = [lesson_progress.get(lesson.id) for lesson in published_lessons]
+        if states and all(state and state["is_completed"] for state in states):
+            topic.student_status = "full"
+        elif any(state and (state["is_started"] or state["is_completed"]) for state in states):
+            topic.student_status = "started"
+        else:
+            topic.student_status = ""
+
+    activity_rows = StudentTopicActivity.objects.filter(
+        student=student, topic__in=topic_list
+    ).select_related("topic")
+    activity_by_topic = {row.topic_id: row for row in activity_rows}
+
+    # В верхней строке показываем темы, которые ученик чаще открывает
+    # или на которых проводит больше времени. У каждой темы — её хештег.
+    opened_topics = []
+    for topic in topic_list:
+        activity = activity_by_topic.get(topic.id)
+        if not activity or not (activity.open_count or activity.total_seconds):
+            continue
+        tags = (topic.hashtags or "").split()
+        label = tags[0] if tags else "#" + "".join(
+            character for character in topic.title if character.isalnum()
+        )
+        if not label.startswith("#"):
+            label = "#" + label
+        opened_topics.append({
+            "topic_id": topic.id,
+            "subject_id": topic.subject_id,
+            "label": label,
+            "open_count": activity.open_count,
+            "total_seconds": activity.total_seconds,
+        })
+    popular_topics = sorted(
+        opened_topics,
+        key=lambda item: (item["open_count"], item["total_seconds"]),
+        reverse=True,
+    )[:8]
+
     selection = request.session.get("rubricator_selection", {})
     has_saved_selection = bool(selection)
     selected_subject_ids = [str(item) for item in selection.get("subject_ids", [])]
@@ -490,8 +544,48 @@ def rubricator(request):
         "selected_lesson_ids": selected_lesson_ids,
         "selected_microtopic_ids": selected_microtopic_ids,
         "plan_theory_counts": plan_theory_counts,
+        "popular_topics": popular_topics,
     }
     return render(request, "learning/rubricator.html", context)
+
+
+@require_POST
+def track_topic_activity(request):
+    """Сохраняет открытия темы и время, проведённое в раскрытом блоке."""
+    student = _current_student(request)
+    if not student:
+        return JsonResponse({"ok": False}, status=403)
+
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+        topic_id = int(payload.get("topic_id"))
+        seconds = max(0, min(300, int(payload.get("seconds", 0))))
+        opened = bool(payload.get("opened", False))
+    except (TypeError, ValueError, json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"ok": False, "error": "invalid_payload"}, status=400)
+
+    topic = Topic.objects.filter(
+        id=topic_id,
+        subject__students=student,
+    ).first()
+    if topic is None:
+        return JsonResponse({"ok": False}, status=404)
+
+    activity, _ = StudentTopicActivity.objects.get_or_create(
+        student=student, topic=topic
+    )
+    update_fields = []
+    if opened:
+        activity.open_count += 1
+        activity.last_opened_at = timezone.now()
+        update_fields.extend(["open_count", "last_opened_at"])
+    if seconds:
+        activity.total_seconds += seconds
+        update_fields.append("total_seconds")
+    if update_fields:
+        activity.save(update_fields=update_fields)
+
+    return JsonResponse({"ok": True})
 
 
 @require_POST
