@@ -555,7 +555,7 @@ button {
     flex-direction: column;
     align-items: flex-start;
 }
-.subtopic-status { margin: 0 0 -.85rem .1rem; }
+.subtopic-status { margin: 0 .1rem 0 0; }
 
 .subtopic-heading {
     display: flex;
@@ -1265,15 +1265,14 @@ footer {
                         <div class="topic-children">
                             {% for lesson in topic.lessons.all %}
                             <div class="subtopic-item" data-lesson-id="{{ lesson.id }}">
-                                {% if lesson.student_status == "full" %}
-                                <img class="topic-status subtopic-status" src="{% static 'learning/icons/indicator_full.svg' %}" alt="Подтема пройдена">
-                                {% elif lesson.student_status == "started" %}
-                                <img class="topic-status subtopic-status" src="{% static 'learning/icons/indicator_medium.svg' %}" alt="Подтема начата">
-                                {% else %}
-                                <img class="topic-status subtopic-status" src="{% static 'learning/icons/indicator_empty.svg' %}" alt="Подтема не начата">
-                                {% endif %}
-
                                 <div class="subtopic-heading">
+                                    {% if lesson.student_status == "full" %}
+                                    <img class="topic-status subtopic-status" src="{% static 'learning/icons/indicator_full.svg' %}" alt="Подтема пройдена">
+                                    {% elif lesson.student_status == "started" %}
+                                    <img class="topic-status subtopic-status" src="{% static 'learning/icons/indicator_medium.svg' %}" alt="Подтема начата">
+                                    {% else %}
+                                    <img class="topic-status subtopic-status" src="{% static 'learning/icons/indicator_empty.svg' %}" alt="Подтема не начата">
+                                    {% endif %}
                                     <label class="subtopic-check">
                                         <input
                                             type="checkbox"
