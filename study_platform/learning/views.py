@@ -515,7 +515,10 @@ def rubricator(request):
     # Если подпись хештега совпадает с названием дочернего элемента без пробелов
     # и знаков препинания, ссылка направляется на этот элемент.
     def normalize_tag_target(value):
-        return "".join(character.casefold() for character in value if character.isalnum())
+        return "".join(
+            "е" if character.casefold() == "ё" else character.casefold()
+            for character in value if character.isalnum()
+        )
 
     opened_topics = []
     for topic in topic_list:
