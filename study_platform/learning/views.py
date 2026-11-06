@@ -496,43 +496,87 @@ def rubricator(request):
         else:
             topic.student_status = ""
 
+        # Кружок состояния отображается у каждой подтемы, а не у родительской темы.
+        for lesson in topic.lessons.all():
+            state = lesson_progress.get(lesson.id)
+            if state and state["is_completed"]:
+                lesson.student_status = "full"
+            elif state and state["is_started"]:
+                lesson.student_status = "started"
+            else:
+                lesson.student_status = ""
+
     activity_rows = StudentTopicActivity.objects.filter(
         student=student, topic__in=topic_list
     ).select_related("topic")
     activity_by_topic = {row.topic_id: row for row in activity_rows}
 
-    # В верхней строке показываем темы, которые ученик чаще открывает
-    # или на которых проводит больше времени. У каждой темы — её хештег.
+    # Хештеги ведут к конкретному элементу дерева: теме, подтеме или микротеме.
+    # Если подпись хештега совпадает с названием дочернего элемента без пробелов
+    # и знаков препинания, ссылка направляется на этот элемент.
+    def normalize_tag_target(value):
+        return "".join(character.casefold() for character in value if character.isalnum())
+
     opened_topics = []
     for topic in topic_list:
         activity = activity_by_topic.get(topic.id)
         if not activity or not (activity.open_count or activity.total_seconds):
             continue
         tags = (topic.hashtags or "").split()
-        label = tags[0] if tags else "#" + "".join(
-            character for character in topic.title if character.isalnum()
-        )
-        if not label.startswith("#"):
-            label = "#" + label
-        opened_topics.append({
-            "topic_id": topic.id,
-            "subject_id": topic.subject_id,
-            "label": label,
-            "open_count": activity.open_count,
-            "total_seconds": activity.total_seconds,
-        })
-    # Отдельно учитываем частоту открытий и длительность изучения,
-    # чтобы в подборку попадали оба типа интереса.
+        if not tags:
+            tags = ["#" + "".join(
+                character for character in topic.title if character.isalnum()
+            )]
+
+        for label in tags:
+            if not label.startswith("#"):
+                label = "#" + label
+            normalized_label = normalize_tag_target(label.lstrip("#"))
+            target_type = "topic"
+            target_id = topic.id
+
+            for lesson in topic.lessons.all():
+                if normalized_label == normalize_tag_target(lesson.title):
+                    target_type = "lesson"
+                    target_id = lesson.id
+                    break
+                matching_microtopic = next(
+                    (
+                        microtopic for microtopic in lesson.microtopics.all()
+                        if normalized_label == normalize_tag_target(microtopic.title)
+                    ),
+                    None,
+                )
+                if matching_microtopic:
+                    target_type = "microtopic"
+                    target_id = matching_microtopic.id
+                    break
+
+            opened_topics.append({
+                "topic_id": topic.id,
+                "subject_id": topic.subject_id,
+                "label": label,
+                "target_type": target_type,
+                "target_id": target_id,
+                "open_count": activity.open_count,
+                "total_seconds": activity.total_seconds,
+            })
+
+    # Частота открытий и длительность изучения учитываются независимо.
     by_opens = sorted(
         opened_topics, key=lambda item: (item["open_count"], item["total_seconds"]), reverse=True
     )[:4]
     by_duration = sorted(
         opened_topics, key=lambda item: (item["total_seconds"], item["open_count"]), reverse=True
     )[:4]
-    popular_by_id = {item["topic_id"]: item for item in by_opens}
-    popular_by_id.update({item["topic_id"]: item for item in by_duration})
+    popular_by_target = {
+        (item["target_type"], item["target_id"]): item for item in by_opens
+    }
+    popular_by_target.update({
+        (item["target_type"], item["target_id"]): item for item in by_duration
+    })
     popular_topics = sorted(
-        popular_by_id.values(),
+        popular_by_target.values(),
         key=lambda item: (item["open_count"], item["total_seconds"]),
         reverse=True,
     )
