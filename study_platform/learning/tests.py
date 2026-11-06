@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import json
 
 from django.test import TestCase
 from django.urls import reverse
@@ -9,6 +10,7 @@ from .models import (
     Student,
     StudentAccess,
     StudentLessonProgress,
+    StudentTopicActivity,
     Subject,
     TeacherCollection,
     TeacherCollectionFile,
@@ -264,3 +266,80 @@ class DailyPlanLaunchTests(TestCase):
             fetch_redirect_response=False,
         )
 
+
+
+class RubricatorTopicActivityTests(TestCase):
+    def setUp(self):
+        self.subject = Subject.objects.create(title="История")
+        self.student = Student.objects.create(name="Тестовый ученик", exam="EGE")
+        self.student.subjects.add(self.subject)
+        StudentAccess.objects.create(
+            student=self.student,
+            code_lookup="rubricator-activity-lookup",
+            code_hash="rubricator-activity-hash",
+        )
+        session = self.client.session
+        session["student_id"] = self.student.id
+        session.save()
+
+    def test_topic_status_markers_follow_student_lesson_progress(self):
+        completed_topic = Topic.objects.create(
+            subject=self.subject, title="Завершённая тема"
+        )
+        started_topic = Topic.objects.create(
+            subject=self.subject, title="Начатая тема"
+        )
+        completed_lesson = Lesson.objects.create(
+            topic=completed_topic, title="Завершённый урок", is_published=True
+        )
+        started_lesson = Lesson.objects.create(
+            topic=started_topic, title="Незавершённый урок", is_published=True
+        )
+        StudentLessonProgress.objects.create(
+            student=self.student, lesson=completed_lesson,
+            is_started=True, is_completed=True,
+        )
+        StudentLessonProgress.objects.create(
+            student=self.student, lesson=started_lesson,
+            is_started=True, is_completed=False,
+        )
+
+        response = self.client.get(reverse("rubricator"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'alt="Тема полностью просмотрена"')
+        self.assertContains(response, 'alt="Тема начата, но не завершена"')
+
+    def test_activity_endpoint_counts_opens_and_study_seconds(self):
+        topic = Topic.objects.create(subject=self.subject, title="Популярная тема")
+
+        response = self.client.post(
+            reverse("track_topic_activity"),
+            data=json.dumps({
+                "topic_id": topic.id,
+                "opened": True,
+                "seconds": 42,
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        activity = StudentTopicActivity.objects.get(student=self.student, topic=topic)
+        self.assertEqual(activity.open_count, 1)
+        self.assertEqual(activity.total_seconds, 42)
+
+    def test_popular_topic_tag_uses_saved_topic_hashtag_and_link_target(self):
+        topic = Topic.objects.create(
+            subject=self.subject,
+            title="Пётр Первый",
+            hashtags="#ПетрПервый #Реформы",
+        )
+        StudentTopicActivity.objects.create(
+            student=self.student, topic=topic, open_count=3, total_seconds=90
+        )
+
+        response = self.client.get(reverse("rubricator"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "#ПетрПервый")
+        self.assertContains(response, f'data-topic-id="{topic.id}"')
