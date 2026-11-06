@@ -1021,6 +1021,38 @@ footer {
  .plan-progress[data-progress-kind="practice"] .plan-progress-base { flex-basis:72%; }
  .plan-progress[data-progress-kind="practice"] .plan-progress-change { flex-basis:28%; }
 }
+
+/* SVG-иконки и компоновка поп-апа по Figma 6316:76. */
+.plan-subject { position:relative; gap:14px; }
+.plan-subject input { position:absolute; width:1px; height:1px; opacity:0; margin:0; }
+.plan-check-icon { display:block; flex:0 0 12px; width:12px; height:12px; }
+.plan-check-icon--checked { display:none; }
+.plan-subject input:checked ~ .plan-check-icon--empty,
+.daily-plan-subjects input:checked ~ .plan-check-icon--empty { display:none; }
+.plan-subject input:checked ~ .plan-check-icon--checked,
+.daily-plan-subjects input:checked ~ .plan-check-icon--checked { display:block; }
+.daily-plan-subjects .plan-check-icon { width:12px; height:12px; flex-basis:12px; }
+.plan-task, .daily-plan-task {
+ display:grid; grid-template-columns:144px auto; align-items:center; justify-content:start;
+ gap:0; min-height:27px; font-size:13px; line-height:1.2;
+}
+.plan-task-label { grid-column:1; grid-row:1; }
+.plan-task-controls, .daily-plan-task .plan-task-controls {
+ grid-column:2; grid-row:1; display:inline-flex; align-items:center; justify-content:flex-start; gap:8px; font-weight:400;
+}
+.plan-task-count, .daily-plan-task .plan-task-count {
+ display:inline-flex; align-items:center; justify-content:center; width:10px; min-width:10px; height:14px;
+ padding:0; border:0; border-radius:0; font-size:13px; font-weight:500; line-height:1;
+}
+.plan-task-controls button, .daily-plan-task .plan-task-controls button {
+ display:inline-flex; align-items:center; justify-content:center; width:8px; height:14px;
+ padding:0; border:0; background:transparent; line-height:1; cursor:pointer;
+}
+.plan-task-controls button img, .daily-plan-task .plan-task-controls button img { display:block; width:8px; height:14px; }
+.plan-quote-button, .daily-plan-quote { border:0; text-decoration:none; cursor:pointer; }
+.plan-quote-button:hover, .daily-plan-quote:hover { text-decoration:none; }
+@media(max-width:600px) { .plan-task, .daily-plan-task { grid-template-columns:42% auto; } }
+
 </style>
 </head>
 
@@ -1250,18 +1282,18 @@ footer {
     <section class="plan-modal-window" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title" tabindex="-1">
         
         <h2 class="plan-modal-title" id="plan-modal-title">План <span id="plan-modal-date"></span></h2>
-        <div class="plan-subjects" id="preview-subjects" aria-label="Выбранные предметы"></div>
+        <div class="plan-subjects" id="preview-subjects" aria-label="Выбранные предметы" data-icon-checked="{% static 'learning/icons/Vector.svg' %}" data-icon-empty="{% static 'learning/icons/Vector_empty.svg' %}"></div>
 
         <div class="plan-topics" id="preview-topics" aria-live="polite">
             <p class="plan-preview-empty">Здесь появятся выбранные темы.</p>
         </div>
 
         <div class="plan-task-list" aria-label="Количество заданий">
-            <div class="plan-task"><span class="plan-task-count" data-count="2">2</span><span>Карты</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить карты">+</button><button type="button" data-step="-1" aria-label="Убрать карты">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="5">5</span><span>Сопоставление</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания на сопоставление">+</button><button type="button" data-step="-1" aria-label="Убрать задания на сопоставление">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="7">7</span><span>Выбор одного</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания с выбором">+</button><button type="button" data-step="-1" aria-label="Убрать задания с выбором">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="9">9</span><span>Краткий ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить краткие ответы">+</button><button type="button" data-step="-1" aria-label="Убрать краткие ответы">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="1">1</span><span>Развернутый ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить развернутые ответы">+</button><button type="button" data-step="-1" aria-label="Убрать развернутые ответы">-</button></span></div>
+            <div class="plan-task"><span class="plan-task-label">Карты</span><span class="plan-task-controls"><button type="button" data-step="-1" aria-label="Уменьшить карты"><img src="{% static 'learning/icons/Vector_left.svg' %}" alt=""></button><span class="plan-task-count" data-count="2">2</span><button type="button" data-step="1" aria-label="Увеличить карты"><img src="{% static 'learning/icons/Vector_right.svg' %}" alt=""></button></span></div>
+            <div class="plan-task"><span class="plan-task-label">Сопоставление</span><span class="plan-task-controls"><button type="button" data-step="-1" aria-label="Уменьшить сопоставление"><img src="{% static 'learning/icons/Vector_left.svg' %}" alt=""></button><span class="plan-task-count" data-count="5">5</span><button type="button" data-step="1" aria-label="Увеличить сопоставление"><img src="{% static 'learning/icons/Vector_right.svg' %}" alt=""></button></span></div>
+            <div class="plan-task"><span class="plan-task-label">Выбор одного</span><span class="plan-task-controls"><button type="button" data-step="-1" aria-label="Уменьшить выбор одного"><img src="{% static 'learning/icons/Vector_left.svg' %}" alt=""></button><span class="plan-task-count" data-count="7">7</span><button type="button" data-step="1" aria-label="Увеличить выбор одного"><img src="{% static 'learning/icons/Vector_right.svg' %}" alt=""></button></span></div>
+            <div class="plan-task"><span class="plan-task-label">Краткий ответ</span><span class="plan-task-controls"><button type="button" data-step="-1" aria-label="Уменьшить краткий ответ"><img src="{% static 'learning/icons/Vector_left.svg' %}" alt=""></button><span class="plan-task-count" data-count="9">9</span><button type="button" data-step="1" aria-label="Увеличить краткий ответ"><img src="{% static 'learning/icons/Vector_right.svg' %}" alt=""></button></span></div>
+            <div class="plan-task"><span class="plan-task-label">Развернутый ответ</span><span class="plan-task-controls"><button type="button" data-step="-1" aria-label="Уменьшить развернутый ответ"><img src="{% static 'learning/icons/Vector_left.svg' %}" alt=""></button><span class="plan-task-count" data-count="1">1</span><button type="button" data-step="1" aria-label="Увеличить развернутый ответ"><img src="{% static 'learning/icons/Vector_right.svg' %}" alt=""></button></span></div>
         </div>
 
         <div class="plan-changes">
@@ -1331,9 +1363,17 @@ footer {
         checkbox.tabIndex = -1;
         checkbox.setAttribute("aria-hidden", "true");
         checkbox.addEventListener("click", function (event) { event.preventDefault(); });
+        const emptyIcon = document.createElement("img");
+        emptyIcon.className = "plan-check-icon plan-check-icon--empty";
+        emptyIcon.src = previewSubjects.dataset.iconEmpty;
+        emptyIcon.alt = "";
+        const checkedIcon = document.createElement("img");
+        checkedIcon.className = "plan-check-icon plan-check-icon--checked";
+        checkedIcon.src = previewSubjects.dataset.iconChecked;
+        checkedIcon.alt = "";
         const text = document.createElement("span");
         text.textContent = title;
-        label.append(checkbox, text);
+        label.append(checkbox, emptyIcon, checkedIcon, text);
         previewSubjects.appendChild(label);
     }
 
