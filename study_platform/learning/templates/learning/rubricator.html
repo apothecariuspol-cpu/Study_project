@@ -1227,13 +1227,12 @@ footer {
 
                     {% for topic in subject.topics.all %}
                     <article class="topic-item{% if forloop.first %} is-open{% endif %}" data-topic-id="{{ topic.id }}">
-                        {% if topic.student_status == "full" %}
-                        <img class="topic-status" src="{% static 'learning/icons/indicator_full.svg' %}" alt="Тема полностью просмотрена">
-                        {% elif topic.student_status == "started" %}
-                        <img class="topic-status" src="{% static 'learning/icons/indicator_medium.svg' %}" alt="Тема начата, но не завершена">
-                        {% endif %}
-
                         <div class="topic-heading">
+                            {% if topic.student_status == "full" %}
+                            <img class="topic-status" src="{% static 'learning/icons/indicator_full.svg' %}" alt="Тема полностью просмотрена">
+                            {% elif topic.student_status == "started" %}
+                            <img class="topic-status" src="{% static 'learning/icons/indicator_medium.svg' %}" alt="Тема начата, но не завершена">
+                            {% endif %}
                             <label class="topic-check">
                                 <input
                                     type="checkbox"
@@ -1935,10 +1934,9 @@ footer {
         });
     });
 
+    updateSubjectPanels();
     const initiallyOpenTopic = form.querySelector(".subject-panel.is-active .topic-item.is-open");
     if (initiallyOpenTopic) activateTopicTimer(initiallyOpenTopic.dataset.topicId, true);
-
-    updateSubjectPanels();
 })();
 </script>
 
