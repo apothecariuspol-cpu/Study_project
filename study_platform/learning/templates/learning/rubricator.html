@@ -1063,6 +1063,12 @@ footer {
  grid-column:2; grid-row:1;
 }
 
+
+/* Чуть увеличиваем расстояние между числом и правой стрелкой счётчика. */
+.plan-task-controls button[data-step="1"],
+.daily-plan-task .plan-task-controls button[data-step="1"] { margin-left:4px; }
+.mistake-demo-note { margin:8px 0 0; font-size:11px; color:#777; font-style:italic; }
+
 </style>
 </head>
 
@@ -1391,12 +1397,7 @@ footer {
         const row = document.createElement("div");
         row.className = "plan-topic";
         row.textContent = title;
-        if (parent) {
-            const parentName = document.createElement("small");
-            parentName.className = "plan-topic-parent";
-            parentName.textContent = parent;
-            row.appendChild(parentName);
-        }
+        // В поп-апе показываем только название выбранного урока.
         previewTopics.appendChild(row);
     }
 
