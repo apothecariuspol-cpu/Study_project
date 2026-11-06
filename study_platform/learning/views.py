@@ -521,11 +521,21 @@ def rubricator(request):
             "open_count": activity.open_count,
             "total_seconds": activity.total_seconds,
         })
+    # Отдельно учитываем частоту открытий и длительность изучения,
+    # чтобы в подборку попадали оба типа интереса.
+    by_opens = sorted(
+        opened_topics, key=lambda item: (item["open_count"], item["total_seconds"]), reverse=True
+    )[:4]
+    by_duration = sorted(
+        opened_topics, key=lambda item: (item["total_seconds"], item["open_count"]), reverse=True
+    )[:4]
+    popular_by_id = {item["topic_id"]: item for item in by_opens}
+    popular_by_id.update({item["topic_id"]: item for item in by_duration})
     popular_topics = sorted(
-        opened_topics,
+        popular_by_id.values(),
         key=lambda item: (item["open_count"], item["total_seconds"]),
         reverse=True,
-    )[:8]
+    )
 
     selection = request.session.get("rubricator_selection", {})
     has_saved_selection = bool(selection)
