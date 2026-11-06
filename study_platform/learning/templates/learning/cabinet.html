@@ -527,17 +527,37 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 .daily-plan-divider { height: 1px; margin: 0 0 2rem; border: 0; background: #080808; }
 .daily-plan-task-list { display: grid; gap: .65rem; margin-bottom: 3.5rem; }
 .daily-plan-task {
-    display: flex;
+    display: grid;
+    grid-template-columns: 2.9rem minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
     gap: .6rem;
     font-size: .95rem;
     line-height: 1.2;
 }
-.daily-plan-task .stepper { margin: 0; min-width: 3.8rem; height: 1.45rem; }
-.daily-plan-task .stepper button { flex-basis: .9rem; width: .9rem; }
-.daily-plan-task .stepper button svg { width: .7rem; height: .9rem; }
-.daily-plan-task .stepper-value { flex-basis: 1rem; width: 1rem; font-size: 1rem; font-weight: 500; }
+.daily-plan-task .plan-task-count {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 2.9rem;
+    height: 1.45rem;
+    border: 1px solid #080808;
+    border-radius: .25rem;
+    font-size: 1rem;
+}
+.daily-plan-task .plan-task-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: .65rem;
+    font-weight: 600;
+}
+.daily-plan-task .plan-task-controls button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-size: 1.35rem;
+    font-weight: 600;
+    line-height: 1;
+}
 .daily-plan-changes { margin-top: auto; }
 .daily-plan-changes-title { margin-bottom: .65rem; font-size: .95rem; }
 .change-bar {
@@ -559,6 +579,46 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
     color: #fff;
 }
 .change-bar-label strong { font-size: .65rem; }
+.plan-progress {
+    display: flex;
+    position: relative;
+    width: 100%;
+    height: 1.15rem;
+    margin-top: .35rem;
+    background: #d9d9d9;
+    overflow: hidden;
+    font-size: .7rem;
+    line-height: 1;
+}
+.plan-progress-base {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex: 0 0 var(--base-width, 10%);
+    min-width: 2.5rem;
+    padding-right: .35rem;
+    background: #080808;
+    color: #fff;
+    font-weight: 700;
+}
+.plan-progress-change {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 var(--change-width, 2%);
+    min-width: 2.7rem;
+    background: #a7f39a;
+    border: 1px solid #080808;
+}
+.plan-progress-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    padding-right: .45rem;
+    color: #080808;
+    font-size: .65rem;
+}
 .change-bar-delta {
     display: flex;
     align-items: center;
@@ -570,18 +630,34 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
     font-size: .62rem;
 }
 .daily-plan-quote {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     margin: 5.9rem 0 0;
     font-size: .95rem;
     line-height: 1.2;
-    text-align: center;
+    text-align: left;
 }
 .daily-plan-quote span { border-bottom: 1px solid #080808; padding-bottom: .15rem; }
+.daily-plan-quote cite {
+    display: block;
+    margin-top: .15rem;
+    color: var(--gray);
+    font-size: .85rem;
+    font-style: normal;
+}
 @media (max-width: 520px) {
     .daily-plan-modal {
         width: min(52rem, calc(100vw - .75rem));
         min-height: min(48rem, calc(100dvh - .75rem));
         padding: 4rem 3.9rem 5.4rem;
     }
+    .daily-plan-task { grid-template-columns: 2.3rem minmax(0, 1fr) auto; gap: .5rem; font-size: 1rem; }
+    .daily-plan-task .plan-task-count { width: 2.3rem; height: 1.7rem; font-size: .85rem; }
+    .daily-plan-task .plan-task-controls { gap: .3rem; }
+    .daily-plan-task .plan-task-controls button { font-size: 1.2rem; }
+    .plan-progress { height: 1.2rem; }
+    .plan-progress-label { font-size: .75rem; padding-right: .7rem; }
 }
 @media (max-width: 370px) {
     .daily-plan-modal { padding-right: 3.2rem; padding-left: 3.2rem; }
@@ -638,6 +714,128 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
     .welcome-mood { top: 63%; font-size: 1rem; }
     .demo-welcome-button { top: 82%; font-size: 1.1rem; }
 }
+
+.daily-plan-overlay[hidden] { display:none !important; }
+/* Поп-ап плана: геометрия и расположение по Figma 6316:76 */
+.plan-modal-window, .daily-plan-modal {
+ position:relative; box-sizing:border-box; width:min(568px,calc(100vw - 24px)); height:min(819px,calc(100dvh - 24px));
+ min-height:0; max-height:none; margin:auto; padding:0; overflow:hidden; border:0; border-radius:4px; background:#fff; box-shadow:none;
+}
+.plan-modal-title, .daily-plan-title { position:absolute; left:170px; top:58px; margin:0; font-family:"Jost Local","Jost",Arial,sans-serif; font-size:24px; font-weight:400; line-height:1.2; }
+.plan-subjects, .daily-plan-subjects { position:absolute; left:165px; top:127px; display:flex; flex-direction:row; align-items:center; gap:24px; margin:0; font-size:13px; line-height:1.2; }
+.plan-subject, .daily-plan-subjects .check { display:inline-flex; align-items:center; gap:8px; font-size:13px; }
+.plan-subject input, .daily-plan-subjects input { width:24px; height:24px; margin:0; accent-color:#080808; }
+.plan-topics, .daily-plan-topics { position:absolute; left:171px; top:203px; display:flex; flex-direction:column; gap:4px; width:386px; max-height:132px; overflow:auto; margin:0; font-size:13px; line-height:1.75; }
+.plan-topic, .daily-plan-topic { font-size:13px; line-height:1.75; }
+.plan-topic-parent, .daily-plan-topic small { color:#888; font-size:10px; }
+.plan-task-list, .daily-plan-task-list { position:absolute; left:172px; top:353px; display:grid; grid-template-columns:1fr; gap:0; width:386px; margin:0; }
+.plan-task, .daily-plan-task { display:grid; grid-template-columns:161px 1fr 64px; align-items:center; gap:0; min-height:27px; font-size:13px; line-height:1.2; }
+.plan-task-count, .daily-plan-task .plan-task-count { grid-column:2; grid-row:1; justify-self:start; width:auto; height:auto; border:0; border-radius:0; font-size:13px; font-weight:500; }
+.plan-task > span:nth-child(2), .daily-plan-task > span:nth-child(2) { grid-column:1; grid-row:1; }
+.plan-task-controls, .daily-plan-task .plan-task-controls { grid-column:3; grid-row:1; display:flex; align-items:center; justify-content:flex-start; gap:24px; }
+.plan-task-controls button, .daily-plan-task .plan-task-controls button { padding:0; border:0; background:none; font-size:17px; line-height:1; }
+.plan-changes, .daily-plan-changes { position:absolute; left:172px; top:540px; width:242px; margin:0; }
+.plan-changes-title, .daily-plan-changes-title { margin:0 0 10px; font-size:13px; font-weight:400; }
+.plan-progress { height:18px; margin-top:7px; overflow:visible; background:transparent; font-size:8px; }
+.plan-progress-base { min-width:0; padding-right:4px; font-size:8px; }
+.plan-progress-change { min-width:0; border:0; background:#b1ffa5; font-size:8px; }
+.plan-progress-label { display:none; }
+.plan-quote-button, .daily-plan-quote { position:absolute; left:215px; top:679px; display:inline-flex; flex-direction:column; align-items:flex-start; margin:0; padding:0 0 2px; border:0; border-bottom:1px solid #080808; border-radius:0; background:transparent; color:#080808; font-family:"Jost Local","Jost",Arial,sans-serif; font-size:13px; font-weight:400; line-height:1.2; text-align:left; cursor:pointer; }
+.daily-plan-quote { left:215px; top:679px; }
+.plan-quote-author, .daily-plan-quote cite { display:none; }
+@media(max-width:600px) {
+ .plan-modal-window, .daily-plan-modal { width:min(568px,calc(100vw - 16px)); height:min(819px,calc(100dvh - 16px)); }
+ .plan-modal-title, .daily-plan-title { left:30%; top:7.1%; font-size:clamp(18px,4.2vw,24px); }
+ .plan-subjects, .daily-plan-subjects { left:29%; top:15.5%; gap:12px; }
+ .plan-topics, .daily-plan-topics { left:30%; top:24.8%; width:68%; }
+ .plan-task-list, .daily-plan-task-list { left:30.3%; top:43.1%; width:68%; }
+ .plan-task, .daily-plan-task { grid-template-columns:42% 1fr 64px; }
+ .plan-changes, .daily-plan-changes { left:30.3%; top:65.9%; width:43%; }
+ .plan-quote-button, .daily-plan-quote { left:37.9%; top:82.9%; }
+}
+
+
+.plan-progress { position:relative; width:242px; }
+.plan-progress[data-progress-kind="theory"] .plan-progress-base { flex-basis:195px; }
+.plan-progress[data-progress-kind="theory"] .plan-progress-change { flex-basis:26px; }
+.plan-progress[data-progress-kind="practice"] .plan-progress-base { flex-basis:175px; }
+.plan-progress[data-progress-kind="practice"] .plan-progress-change { flex-basis:67px; }
+.plan-progress-label {
+ display:flex; position:absolute; left:7px; top:0; bottom:0; align-items:center; justify-content:flex-start;
+ padding:0; color:#fff; font-size:13px; line-height:18px; pointer-events:none;
+}
+@media(max-width:600px) {
+ .plan-progress { width:100%; }
+ .plan-progress[data-progress-kind="theory"] .plan-progress-base { flex-basis:80%; }
+ .plan-progress[data-progress-kind="theory"] .plan-progress-change { flex-basis:11%; }
+ .plan-progress[data-progress-kind="practice"] .plan-progress-base { flex-basis:72%; }
+ .plan-progress[data-progress-kind="practice"] .plan-progress-change { flex-basis:28%; }
+}
+
+/* SVG-иконки и компоновка поп-апа по Figma 6316:76. */
+.plan-subject { position:relative; gap:14px; }
+.plan-subject input { position:absolute; width:1px; height:1px; opacity:0; margin:0; }
+.plan-check-icon { display:block; flex:0 0 12px; width:12px; height:12px; }
+.plan-check-icon--checked { display:none; }
+.plan-subject input:checked ~ .plan-check-icon--empty,
+.daily-plan-subjects input:checked ~ .plan-check-icon--empty { display:none; }
+.plan-subject input:checked ~ .plan-check-icon--checked,
+.daily-plan-subjects input:checked ~ .plan-check-icon--checked { display:block; }
+.daily-plan-subjects .plan-check-icon { width:12px; height:12px; flex-basis:12px; }
+.plan-task, .daily-plan-task {
+ display:grid; grid-template-columns:144px auto; align-items:center; justify-content:start;
+ gap:0; min-height:27px; font-size:13px; line-height:1.2;
+}
+.plan-task-label { grid-column:1; grid-row:1; }
+.plan-task-controls, .daily-plan-task .plan-task-controls {
+ grid-column:2; grid-row:1; display:inline-flex; align-items:center; justify-content:flex-start; gap:8px; font-weight:400;
+}
+.plan-task-count, .daily-plan-task .plan-task-count {
+ display:inline-flex; align-items:center; justify-content:center; width:10px; min-width:10px; height:14px;
+ padding:0; border:0; border-radius:0; font-size:13px; font-weight:500; line-height:1;
+}
+.plan-task-controls button, .daily-plan-task .plan-task-controls button {
+ display:inline-flex; align-items:center; justify-content:center; width:8px; height:14px;
+ padding:0; border:0; background:transparent; line-height:1; cursor:pointer;
+}
+.plan-task-controls button img, .daily-plan-task .plan-task-controls button img { display:block; width:8px; height:14px; }
+.plan-quote-button, .daily-plan-quote { border:0; text-decoration:none; cursor:pointer; }
+.plan-quote-button:hover, .daily-plan-quote:hover { text-decoration:none; }
+@media(max-width:600px) { .plan-task, .daily-plan-task { grid-template-columns:42% auto; } }
+
+
+/* Точечные правки поп-апа на странице «Кабинет». */
+.daily-plan-subjects,
+.daily-plan-subjects .check { font-size:16px; }
+.daily-plan-topics,
+.daily-plan-topic,
+.daily-plan-task { font-size:16px; }
+.daily-plan-task .plan-task-count { font-size:16px; }
+.daily-plan-changes { top:540px; }
+.daily-plan-changes-title { font-size:16px; }
+.daily-plan-changes .plan-progress[data-progress-kind="practice"] { margin-top:17px; }
+.daily-plan-quote { top:689px; font-size:16px; }
+@media(max-width:600px) {
+ .daily-plan-changes { top:65.9%; }
+ .daily-plan-changes .plan-progress[data-progress-kind="practice"] { margin-top:17px; }
+ .daily-plan-quote { top:84.1%; }
+}
+
+/* Уточнение селекторов после перестановки элементов счётчика. */
+.daily-plan-subjects input {
+ position:absolute; width:1px; height:1px; opacity:0; margin:0;
+}
+.plan-task > span.plan-task-controls:nth-child(2),
+.daily-plan-task > span.plan-task-controls:nth-child(2) {
+ grid-column:2; grid-row:1;
+}
+
+
+/* Чуть увеличиваем расстояние между числом и правой стрелкой счётчика. */
+.plan-task-controls button[data-step="1"],
+.daily-plan-task .plan-task-controls button[data-step="1"] { margin-left:4px; }
+.mistake-demo-note { margin:8px 0 0; font-size:11px; color:#777; font-style:italic; }
+
 </style>
 </head>
 
@@ -800,8 +998,15 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                         {% for a in tab.assignments %}
                         <li class="collection is-open">
                             <button class="collection-toggle" type="button" aria-expanded="true">{{ a.title }}<svg viewBox="0 0 14 14" fill="none" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4.5l5 5 5-5"/></svg></button>
-                            <div class="assign-meta"><span>Практика</span><b>{{ a.practice|default:"Подборка" }}</b></div>
-                            {% if a.cards_url %}<div class="assign-meta"><span>Карточки</span><b><a href="{{ a.cards_url }}">Скачать (pdf)</a></b></div>{% endif %}
+                            {% if a.description %}
+                            <div class="assign-meta"><span>Описание</span><b>{{ a.description }}</b></div>
+                            {% endif %}
+                            {% for material in a.materials.all %}
+                            <div class="assign-meta">
+                                <span>{% if forloop.first %}Файлы{% endif %}</span>
+                                <b><a href="{% url 'download_teacher_collection_file' material.id %}">{{ material.description|default:"Скачать файл" }}</a></b>
+                            </div>
+                            {% endfor %}
                         </li>
                         {% empty %}
                         {% if student.is_demo %}
@@ -872,12 +1077,15 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                         {% empty %}
                         {% if student.is_demo %}
                         <li><span class="mistake-name">Дмитрий Донской</span><div class="mini-track"><i style="width:42%"></i></div><small>42% верно</small></li>
-                        <li><span class="mistake-name">Иван III</span><div class="mini-track"><i style="width:27%"></i></div><small>27% верно</small></li>
+
                         {% else %}
                         <li class="empty">Пока косяков нет</li>
                         {% endif %}
                         {% endfor %}
                     </ul>
+                    {% if student.is_demo %}
+                    <p class="mistake-demo-note"><em>Пример для демонстрации. Данные обновятся.</em></p>
+                    {% endif %}
 
                     {% if tab.mistakes or student.is_demo %}
                     <div class="section-action-icons">
@@ -966,66 +1174,7 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 </div>
 {% endif %}
 
-<div class="daily-plan-overlay" id="daily-plan-overlay" data-has-selection="{% if has_rubricator_selection %}true{% else %}false{% endif %}" data-mode="{{ rubricator_selection_mode }}" data-generate-url="{% url 'generate_daily_plan' %}" data-csrf="{{ csrf_token }}" hidden>
-    <section class="daily-plan-modal" role="dialog" aria-modal="true" aria-labelledby="daily-plan-title" tabindex="-1">
-        <h2 class="daily-plan-title" id="daily-plan-title">План <span id="daily-plan-date"></span></h2>
-
-        <div class="daily-plan-subjects" id="daily-plan-subjects">
-            {% for plan_subject in daily_plan_subjects %}
-            <label class="check">
-                <input
-                    type="checkbox"
-                    class="daily-subject-choice"
-                    value="{{ plan_subject.id }}"
-                    {% if plan_subject.is_selected %}checked{% endif %}
-                >
-                <span class="box"></span><span>{{ plan_subject.title }}</span>
-            </label>
-            {% endfor %}
-        </div>
-
-        <div class="daily-plan-topics" id="daily-plan-topics">
-            {% for plan_subject in daily_plan_subjects %}
-            <div class="daily-plan-subject-group" data-subject-id="{{ plan_subject.id }}" {% if not plan_subject.is_selected %}hidden{% endif %}>
-                {% for item in plan_subject.items %}
-                <div class="daily-plan-topic">
-                    {% if item.url %}<a href="{{ item.url }}">{{ item.title }}</a>{% else %}<span>{{ item.title }}</span>{% endif %}
-                    {% if item.parent %}<small>{{ item.parent }}</small>{% endif %}
-                </div>
-                {% empty %}
-                <div class="daily-plan-empty">
-                    {% if rubricator_selection_mode == "random" or rubricator_selection_mode == "auto" %}
-                        Подбираем уроки для плана…
-                    {% elif has_rubricator_selection %}
-                        Для этого предмета пока нет выбранных тем.
-                    {% else %}
-                        Сначала выбери темы в рубрикаторе.
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
-            {% endfor %}
-        </div>
-
-        <hr class="daily-plan-divider">
-
-        <div class="daily-plan-task-list">
-            <div class="daily-plan-task"><span>Карты</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="2" inputmode="numeric" aria-label="Количество заданий: Карты"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-            <div class="daily-plan-task"><span>Сопоставление</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="5" inputmode="numeric" aria-label="Количество заданий: Сопоставление"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-            <div class="daily-plan-task"><span>Выбор одного</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="7" inputmode="numeric" aria-label="Количество заданий: Выбор одного"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-            <div class="daily-plan-task"><span>Краткий ответ</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="9" inputmode="numeric" aria-label="Количество заданий: Краткий ответ"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-            <div class="daily-plan-task"><span>Развернутый ответ</span><div class="stepper"><button type="button" data-modal-step="-1" aria-label="Меньше"><svg viewBox="0 0 10 14"><path d="M8 1 2 7l6 6Z" fill="#080808"/></svg></button><input class="stepper-value" value="1" inputmode="numeric" aria-label="Количество заданий: Развернутый ответ"><button type="button" data-modal-step="1" aria-label="Больше"><svg viewBox="0 0 10 14"><path d="m2 1 6 6-6 6Z" fill="#080808"/></svg></button></div></div>
-        </div>
-
-        <div class="daily-plan-changes">
-            <p class="daily-plan-changes-title">Ожидаемые изменения:</p>
-            <div class="change-bar"><div class="change-bar-label"><span>Теория</span><strong>10%</strong></div><div class="change-bar-delta">+2%</div></div>
-            <div class="change-bar"><div class="change-bar-label"><span>Практика</span><strong>8%</strong></div><div class="change-bar-delta">+12%</div></div>
-        </div>
-
-        <blockquote class="daily-plan-quote"><span>Oh shit! Here we go again.</span></blockquote>
-    </section>
-</div>
+{% include "learning/includes/plan_modal.html" with plan_modal_id="plan-modal-overlay" %}
 
 <script>
 /* ПОЛНОЭКРАННОЕ ПРИВЕТСТВИЕ */
@@ -1098,6 +1247,31 @@ document.querySelectorAll("a .info").forEach(function (icon) {
 });
 
 /* СЧЁТЧИКИ ПЛАНА */
+let planSettingsSaveQueue = Promise.resolve();
+function savePlanSettings(panel) {
+    const rows = panel.querySelectorAll(".plan-row");
+    const subjectId = panel.dataset.subjectId;
+    if (!subjectId || rows.length < 2) return;
+    const csrfMatch = document.cookie.match(new RegExp("(^|; )csrftoken=([^;]*)"));
+    const csrf = csrfMatch ? decodeURIComponent(csrfMatch[2]) : "";
+    const body = new URLSearchParams({
+        subject_id: subjectId,
+        theory_count: rows[0].querySelector(".stepper-value").value,
+        practice_count: rows[1].querySelector(".stepper-value").value
+    }).toString();
+    planSettingsSaveQueue = planSettingsSaveQueue.then(function () {
+        return fetch("{% url 'save_daily_plan_settings' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                "X-CSRFToken": csrf,
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: body,
+            keepalive: true
+        });
+    }).catch(function () {});
+}
 function updateActionLinks(panel) {
     const rows = panel.querySelectorAll(".plan-row");
     const theory = rows[0].querySelector(".stepper-value").value;
@@ -1108,6 +1282,7 @@ function updateActionLinks(panel) {
         generate.dataset.practice = practice;
         generate.dataset.subject = panel.dataset.subject;
     }
+
 }
 
 document.querySelectorAll(".plan-row").forEach(function (row) {
@@ -1119,6 +1294,7 @@ document.querySelectorAll(".plan-row").forEach(function (row) {
         const panel = row.closest(".subject-panel");
         panel.dispatchEvent(new Event("plan-change"));
         updateActionLinks(panel);
+        savePlanSettings(panel);
     }
     row.querySelectorAll("[data-step]").forEach(function (button) {
         button.addEventListener("click", function () {
@@ -1343,40 +1519,31 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
     }
 });
 
-/* ПОП-АП ДНЕВНОГО ПЛАНА */
+/* ПОП-АП ДНЕВНОГО ПЛАНА — мост к единому PlanModal + генерация тем с бэка */
 (function () {
-    const overlay = document.getElementById("daily-plan-overlay");
-    if (!overlay) return;
-    const modal = overlay.querySelector(".daily-plan-modal");
-    const date = document.getElementById("daily-plan-date");
-    const subjectChoices = Array.from(overlay.querySelectorAll(".daily-subject-choice"));
-    const subjectGroups = Array.from(overlay.querySelectorAll(".daily-plan-subject-group"));
-    const hasSavedSelection = overlay.dataset.hasSelection === "true";
-    let previousFocus = null;
-
-    function updatePlanTopics() {
-        const checkedIds = new Set(
-            subjectChoices.filter(function (choice) { return choice.checked; })
-                .map(function (choice) { return choice.value; })
-        );
-        subjectGroups.forEach(function (group) {
-            group.hidden = !checkedIds.has(group.dataset.subjectId);
-        });
-    }
-
     function getCookie(name) {
         const match = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]*)"));
         return match ? decodeURIComponent(match[2]) : "";
     }
 
-    async function loadGeneratedGroup(subjectId) {
-        const group = subjectGroups.find(function (item) { return item.dataset.subjectId === String(subjectId); });
-        if (!group) return;
-        const panel = document.querySelector('.subject-panel[data-subject-id="' + subjectId + '"]');
-        const countInput = panel ? panel.querySelector(".plan-row .stepper-value") : null;
-        const count = countInput ? countInput.value : "3";
-        group.innerHTML = '<div class="daily-plan-empty">Подбираем уроки…</div>';
-        const body = new URLSearchParams({ subject_id: subjectId, count: count });
+    async function loadTopicsIntoModal(subjectId, mode, count) {
+        const overlay = document.getElementById("plan-modal-overlay");
+        if (!overlay || !window.PlanModal) return;
+        const topicsBox = overlay.querySelector(".js-plan-modal-topics");
+        if (!topicsBox) return;
+
+        topicsBox.innerHTML = '<div class="plan-topic-empty">Подбираем уроки…</div>';
+
+        // отметить предмет
+        overlay.querySelectorAll(".js-plan-subject-choice").forEach(function (choice) {
+            choice.checked = String(choice.value) === String(subjectId);
+        });
+
+        const body = new URLSearchParams({
+            subject_id: subjectId,
+            count: count || "3",
+            mode: mode || "auto"
+        });
         try {
             const response = await fetch(overlay.dataset.generateUrl, {
                 method: "POST",
@@ -1388,92 +1555,37 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
                 body: body.toString()
             });
             const data = await response.json();
-            if (!response.ok || !data.ok) throw new Error(data.error || "Не удалось составить план.");
-            group.replaceChildren();
-            if (!data.items.length) {
-                const empty = document.createElement("div");
-                empty.className = "daily-plan-empty";
-                empty.textContent = "Нет доступных опубликованных уроков для подбора.";
-                group.appendChild(empty);
-                return;
+            if (!response.ok || !data.ok) throw new Error(data.error || "fail");
+
+            // группа для предмета (чтобы старт по цитате находил ссылки)
+            let html = '<div class="js-plan-subject-group" data-subject-id="' + subjectId + '">';
+            if (!data.items || !data.items.length) {
+                html += '<div class="plan-topic-empty">Нет доступных опубликованных уроков для подбора.</div>';
+            } else {
+                data.items.forEach(function (item) {
+                    html += '<div class="plan-topic-item"><a href="' + item.url + '">' + item.title + "</a></div>";
+                });
             }
-            data.items.forEach(function (item) {
-                const wrapper = document.createElement("div");
-                wrapper.className = "daily-plan-topic";
-                const link = document.createElement("a");
-                link.href = item.url;
-                link.textContent = item.title;
-                wrapper.appendChild(link);
-                if (item.parent) {
-                    const parent = document.createElement("small");
-                    parent.textContent = item.parent;
-                    wrapper.appendChild(parent);
-                }
-                group.appendChild(wrapper);
-            });
-        } catch (error) {
-            group.innerHTML = '<div class="daily-plan-empty">Не удалось загрузить план. Закрой окно и попробуй ещё раз.</div>';
+            html += "</div>";
+            topicsBox.innerHTML = html;
+            if (window.PlanModal.update) window.PlanModal.update();
+        } catch (e) {
+            topicsBox.innerHTML = '<div class="plan-topic-empty">Не удалось загрузить план. Закрой окно и попробуй ещё раз.</div>';
         }
     }
 
-    subjectChoices.forEach(function (choice) {
-        choice.addEventListener("change", function () {
-            updatePlanTopics();
-            if (overlay.dataset.mode === "auto" || overlay.dataset.mode === "random") {
-                if (choice.checked) loadGeneratedGroup(choice.value);
-            }
-        });
-    });
-
-    function openPlan(button) {
-        previousFocus = document.activeElement;
-        date.textContent = new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
-
-        // Если пользователь ещё не сохранял выбор в рубрикаторе,
-        // при первом открытии показываем предмет текущей вкладки кабинета.
-        if (!hasSavedSelection) {
-            const currentPanel = button.closest(".subject-panel");
-            const currentSubjectId = currentPanel ? currentPanel.dataset.subjectId : "";
-            subjectChoices.forEach(function (choice) {
-                choice.checked = choice.value === currentSubjectId;
-            });
-        }
-
-        updatePlanTopics();
-        if (overlay.dataset.mode === "auto" || overlay.dataset.mode === "random") {
-            subjectChoices.filter(function (choice) { return choice.checked; }).forEach(function (choice) {
-                loadGeneratedGroup(choice.value);
-            });
-        }
-        overlay.hidden = false;
-        document.body.style.overflow = "hidden";
-        modal.focus();
-    }
-    function closePlan() {
-        overlay.hidden = true;
-        document.body.style.overflow = "";
-        if (previousFocus) previousFocus.focus();
-    }
     document.querySelectorAll(".js-open-daily-plan").forEach(function (button) {
-        button.addEventListener("click", function () { openPlan(button); });
-    });
-    overlay.addEventListener("click", function (event) {
-        if (event.target === overlay) closePlan();
-    });
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape" && !overlay.hidden) closePlan();
-    });
-    modal.querySelectorAll("[data-modal-step]").forEach(function (button) {
-        button.addEventListener("click", function () {
-            const input = button.parentElement.querySelector(".stepper-value");
-            const current = parseInt(input.value, 10) || 0;
-            input.value = Math.max(0, Math.min(99, current + Number(button.dataset.modalStep)));
-        });
-    });
-    modal.querySelectorAll(".stepper-value").forEach(function (input) {
-        input.addEventListener("change", function () {
-            const value = parseInt(input.value, 10);
-            input.value = Number.isNaN(value) ? 0 : Math.max(0, Math.min(99, value));
+        button.addEventListener("click", function (e) {
+            e.preventDefault();
+            if (!window.PlanModal) return;
+            const panel = button.closest(".subject-panel");
+            const subjectId = panel ? (panel.dataset.subjectId || panel.dataset.subject) : "";
+            const countInput = panel ? panel.querySelector(".plan-row .stepper-value") : null;
+            const count = countInput ? countInput.value : "3";
+            const mode = button.dataset.mode || "auto";
+
+            window.PlanModal.open({ mode: mode });
+            if (subjectId) loadTopicsIntoModal(subjectId, mode, count);
         });
     });
 })();

@@ -1170,43 +1170,7 @@ footer {
     </main>
 </div>
 
-<div class="plan-modal" id="plan-modal" hidden>
-    <div class="plan-modal-backdrop" data-close-plan></div>
-    <section class="plan-modal-window" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title" tabindex="-1">
-        <h2 class="plan-modal-title" id="plan-modal-title">План на день</h2>
-        <button class="plan-quote-button" type="submit" form="rubricator-form" name="action" value="choose" id="study-selected">Oh shit! Here we go again.</button>
-        <p class="plan-quote-author">Джейсон Стетхем</p>
-
-        <div class="plan-subjects" id="preview-subjects" aria-label="Выбранные предметы"></div>
-
-        <div class="plan-topics" id="preview-topics" aria-live="polite">
-            <p class="plan-preview-empty">Здесь появятся выбранные темы.</p>
-        </div>
-
-        <div class="plan-task-list" aria-label="Количество заданий">
-            <div class="plan-task"><span class="plan-task-count" data-count="2">2</span><span>Карты</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить карты">+</button><button type="button" data-step="-1" aria-label="Убрать карты">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="4">4</span><span>Сопоставление</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания на сопоставление">+</button><button type="button" data-step="-1" aria-label="Убрать задания на сопоставление">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="10">10</span><span>Выбор одного</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить задания с выбором">+</button><button type="button" data-step="-1" aria-label="Убрать задания с выбором">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="5">5</span><span>Краткий ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить краткие ответы">+</button><button type="button" data-step="-1" aria-label="Убрать краткие ответы">-</button></span></div>
-            <div class="plan-task"><span class="plan-task-count" data-count="2">2</span><span>Развернутый ответ</span><span class="plan-task-controls"><button type="button" data-step="1" aria-label="Добавить развернутые ответы">+</button><button type="button" data-step="-1" aria-label="Убрать развернутые ответы">-</button></span></div>
-        </div>
-
-        <div class="plan-changes">
-            <h3 class="plan-changes-title">Ожидаемые изменения:</h3>
-            <div class="plan-progress" data-progress-kind="theory">
-                <span class="plan-progress-base" data-base="10" style="--base-width:10%">10%</span>
-                <span class="plan-progress-change" data-change="2" style="--change-width:2%">+2%</span>
-                <span class="plan-progress-label">Теория</span>
-            </div>
-            <div class="plan-progress" data-progress-kind="practice">
-                <span class="plan-progress-base" data-base="8" style="--base-width:8%">8%</span>
-                <span class="plan-progress-change" data-change="12" style="--change-width:12%">+12%</span>
-                <span class="plan-progress-label">Практика</span>
-            </div>
-        </div>
-
-    </section>
-</div>
+{% include "learning/includes/plan_modal.html" with plan_modal_id="plan-modal-overlay" %}
 
 <footer>
     <nav class="footer-links" aria-label="Наши проекты">
@@ -1236,54 +1200,12 @@ footer {
         }
     } catch (e) {}
 
-    // Окно предварительного просмотра показывает только текущий выбор из рубрикатора.
-    const planModal = document.getElementById("plan-modal");
-    const previewSubjects = document.getElementById("preview-subjects");
-    const previewTopics = document.getElementById("preview-topics");
 
-    function addPreviewSubject(title) {
-        const label = document.createElement("label");
-        label.className = "plan-subject";
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = true;
-        checkbox.tabIndex = -1;
-        checkbox.setAttribute("aria-hidden", "true");
-        checkbox.addEventListener("click", function (event) { event.preventDefault(); });
-        const text = document.createElement("span");
-        text.textContent = title;
-        label.append(checkbox, text);
-        previewSubjects.appendChild(label);
-    }
-
-    function addPreviewTopic(title, parent) {
-        const row = document.createElement("div");
-        row.className = "plan-topic";
-        const status = document.createElement("span");
-        status.className = "plan-status";
-        status.textContent = "ВЫБРАНО";
-        const name = document.createElement("span");
-        name.textContent = title;
-        if (parent) {
-            const parentName = document.createElement("small");
-            parentName.className = "plan-topic-parent";
-            parentName.textContent = parent;
-            name.appendChild(parentName);
-        }
-        row.append(status, name);
-        previewTopics.appendChild(row);
-    }
-
-    function renderPlanPreview(mode) {
-        if (!previewSubjects || !previewTopics) return;
-        previewSubjects.replaceChildren();
-        previewTopics.replaceChildren();
-
+    // Единый PlanModal: собираем темы из выбора рубрикатора и открываем общий попап
+    function collectSelectedTopics(mode) {
+        const topics = [];
         const checkedSubjects = Array.from(form.querySelectorAll(".subject-filter:checked"));
         checkedSubjects.forEach(function (subjectInput) {
-            const subjectLabel = subjectInput.closest(".subject-check");
-            addPreviewSubject(subjectLabel ? subjectLabel.textContent.trim() : "Предмет");
-
             const panel = Array.from(form.querySelectorAll(".subject-panel")).find(function (item) {
                 return item.dataset.subjectId === subjectInput.value;
             });
@@ -1292,67 +1214,60 @@ footer {
             panel.querySelectorAll(".topic-item").forEach(function (topic) {
                 const topicInput = topic.querySelector(":scope > .topic-heading .topic-master");
                 const topicTitle = topic.querySelector(":scope > .topic-heading .topic-title");
-                const topicSelected = Boolean(topicInput && topicInput.checked);
-                if (topicSelected) {
-                    addPreviewTopic(topicTitle ? topicTitle.textContent.trim() : "Тема", "");
+                if (topicInput && topicInput.checked) {
+                    topics.push(topicTitle ? topicTitle.textContent.trim() : "Тема");
                     return;
                 }
-
                 topic.querySelectorAll(":scope > .topic-children > .subtopic-item").forEach(function (lesson) {
                     const lessonInput = lesson.querySelector(":scope > .subtopic-heading .lesson-choice");
                     const lessonTitle = lesson.querySelector(":scope > .subtopic-heading .subtopic-title");
-                    const lessonSelected = Boolean(lessonInput && lessonInput.checked);
-                    if (lessonSelected) {
-                        addPreviewTopic(
-                            lessonTitle ? lessonTitle.textContent.trim() : "Подтема",
-                            topicTitle ? topicTitle.textContent.trim() : ""
-                        );
+                    if (lessonInput && lessonInput.checked) {
+                        topics.push(lessonTitle ? lessonTitle.textContent.trim() : "Подтема");
                         return;
                     }
-
                     lesson.querySelectorAll(".microtopic-choice:checked").forEach(function (microInput) {
                         const microLabel = microInput.closest(".microtopic-check");
                         const microTitle = microLabel ? microLabel.querySelector(".microtopic-title") : null;
-                        addPreviewTopic(
-                            microTitle ? microTitle.textContent.trim() : "Микротема",
-                            (topicTitle ? topicTitle.textContent.trim() : "") +
-                                (lessonTitle ? " / " + lessonTitle.textContent.trim() : "")
-                        );
+                        topics.push(microTitle ? microTitle.textContent.trim() : "Микротема");
                     });
                 });
             });
         });
+        return topics;
+    }
 
+    function topicsToHtml(topics, mode) {
         if (mode === "random") {
-            const note = document.createElement("p");
-            note.className = "plan-preview-empty";
-            note.textContent = "Случайный подбор будет сформирован после запуска.";
-            previewTopics.appendChild(note);
-        } else if (!previewTopics.children.length) {
-            const note = document.createElement("p");
-            note.className = "plan-preview-empty";
-            note.textContent = "В выбранных предметах пока нет отмеченных тем.";
-            previewTopics.appendChild(note);
+            return '<div class="plan-topic-empty">Случайный подбор будет сформирован после запуска.</div>';
         }
+        if (!topics.length) {
+            return '<div class="plan-topic-empty">В выбранных предметах пока нет отмеченных тем.</div>';
+        }
+        return topics.map(function (t) {
+            return '<div class="plan-topic-item">' + t + "</div>";
+        }).join("");
     }
 
-    function openPlan() {
-        if (!planModal) return;
-        planModal.hidden = false;
-        document.body.style.overflow = "hidden";
-        const startButton = document.getElementById("study-selected");
-        if (startButton) startButton.focus();
-    }
-    function closePlan() {
-        if (!planModal) return;
-        planModal.hidden = true;
-        document.body.style.overflow = "";
-    }
-    const studySelectedButton = document.getElementById("study-selected");
-    document.getElementById("choose-plan")?.addEventListener("click", function () {
-        if (studySelectedButton) {
-            studySelectedButton.value = "choose";
+    function openRubricatorPlan(mode) {
+        if (!window.PlanModal) return;
+        const topics = collectSelectedTopics(mode);
+        const html = topicsToHtml(topics, mode);
+        // Синхронизируем чекбоксы предметов в попапе
+        const overlay = document.getElementById("plan-modal-overlay");
+        if (overlay) {
+            overlay.dataset.mode = mode || "choose";
+            const checked = Array.from(form.querySelectorAll(".subject-filter:checked")).map(function (el) {
+                return el.value;
+            });
+            overlay.querySelectorAll(".js-plan-subject-choice").forEach(function (choice) {
+                // если value совпадает с id предмета — отмечаем
+                choice.checked = checked.indexOf(choice.value) !== -1 || checked.length === 0;
+            });
         }
+        window.PlanModal.open({ mode: mode, topicsHtml: html });
+    }
+
+    document.getElementById("choose-plan")?.addEventListener("click", function () {
         const checkedSubjects = form.querySelectorAll(".subject-filter:checked");
         if (!checkedSubjects.length) {
             alert("Сначала выбери предмет.");
@@ -1370,108 +1285,15 @@ footer {
             alert("Отметь хотя бы одну тему, подтему или микротему.");
             return;
         }
-        renderPlanPreview("choose");
-        updateExpectedChanges();
-        openPlan();
+        openRubricatorPlan("choose");
     });
+
     document.getElementById("random-plan")?.addEventListener("click", function () {
         if (!form.querySelector(".subject-filter:checked")) {
             alert("Сначала выбери предмет.");
             return;
         }
-        if (studySelectedButton) {
-            studySelectedButton.value = "random";
-        }
-        renderPlanPreview("random");
-        updateExpectedChanges();
-        openPlan();
-    });
-    planModal?.querySelectorAll("[data-close-plan]").forEach(function (element) {
-        element.addEventListener("click", function (event) {
-            if (element.classList.contains("plan-modal-backdrop")) {
-                const dialog = planModal.querySelector(".plan-modal-window");
-                if (!dialog) return;
-                const rect = dialog.getBoundingClientRect();
-                const inDialogHeight = event.clientY >= rect.top && event.clientY <= rect.bottom;
-                const onLeftOrRight = event.clientX < rect.left || event.clientX > rect.right;
-                if (!(inDialogHeight && onLeftOrRight)) return;
-            }
-            closePlan();
-        });
-    });
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape" && planModal && !planModal.hidden) closePlan();
-    });
-    function countSelectedUnits() {
-        let total = 0;
-        const checkedSubjects = Array.from(form.querySelectorAll(".subject-filter:checked"));
-        checkedSubjects.forEach(function (subjectInput) {
-            const panel = Array.from(form.querySelectorAll(".subject-panel")).find(function (item) {
-                return item.dataset.subjectId === subjectInput.value;
-            });
-            if (!panel) return;
-            panel.querySelectorAll(".topic-item").forEach(function (topic) {
-                const topicChoice = topic.querySelector(":scope > .topic-heading .topic-master");
-                if (topicChoice && topicChoice.checked) {
-                    total += 1;
-                    return;
-                }
-                topic.querySelectorAll(":scope > .topic-children > .subtopic-item").forEach(function (lesson) {
-                    const lessonChoice = lesson.querySelector(":scope > .subtopic-heading .lesson-choice");
-                    if (lessonChoice && lessonChoice.checked) {
-                        total += 1;
-                        return;
-                    }
-                    total += lesson.querySelectorAll(".microtopic-choice:checked").length;
-                });
-            });
-        });
-        return total;
-    }
-
-    function updateExpectedChanges() {
-        if (!planModal) return;
-        const selectedUnits = countSelectedUnits();
-        const randomMode = studySelectedButton && studySelectedButton.value === "random";
-        const theoryUnits = selectedUnits || (randomMode ? Math.max(1, form.querySelectorAll(".subject-filter:checked").length) : 1);
-        const theoryBase = 10;
-        const theoryGain = Math.min(100 - theoryBase, theoryUnits * 2);
-
-        const taskTotal = Array.from(planModal.querySelectorAll(".plan-task-count")).reduce(function (sum, counter) {
-            return sum + Math.max(0, Number(counter.dataset.count || counter.textContent) || 0);
-        }, 0);
-        const practiceBase = 8;
-        const practiceGain = Math.min(100 - practiceBase, Math.round(taskTotal * 12 / 23));
-
-        [
-            { kind: "theory", base: theoryBase, gain: theoryGain },
-            { kind: "practice", base: practiceBase, gain: practiceGain }
-        ].forEach(function (item) {
-            const row = planModal.querySelector('[data-progress-kind="' + item.kind + '"]');
-            if (!row) return;
-            const base = row.querySelector(".plan-progress-base");
-            const change = row.querySelector(".plan-progress-change");
-            base.textContent = item.base + "%";
-            change.textContent = "+" + item.gain + "%";
-            base.style.setProperty("--base-width", item.base + "%");
-            change.style.setProperty("--change-width", item.gain + "%");
-            change.setAttribute("aria-label", "Прирост " + item.gain + " процентов");
-        });
-    }
-
-    planModal?.querySelectorAll(".plan-task-controls button").forEach(function (button) {
-        button.addEventListener("click", function () {
-            const counter = button.closest(".plan-task").querySelector(".plan-task-count");
-            const current = Number(counter.dataset.count || counter.textContent);
-            const next = Math.max(0, current + Number(button.dataset.step));
-            counter.dataset.count = String(next);
-            counter.textContent = String(next);
-            updateExpectedChanges();
-        });
-    });
-    document.getElementById("study-selected")?.addEventListener("click", function () {
-        // Сохраняем текущий режим (выбор или рандом) перед отправкой формы.
-        if (studySelectedButton) studySelectedButton.value = studySelectedButton.value || "choose";
+        openRubricatorPlan("random");
     });
 
     function updateCount() {
@@ -1479,7 +1301,10 @@ footer {
         const count = active ? active.querySelectorAll(
             ".topic-master:checked, .lesson-choice:checked, .microtopic-choice:checked"
         ).length : 0;
-        if (planModal && !planModal.hidden) updateExpectedChanges();
+        if (window.PlanModal && window.PlanModal.update) {
+            const overlay = document.getElementById("plan-modal-overlay");
+            if (overlay && !overlay.hidden) window.PlanModal.update();
+        }
         return count;
     }
 

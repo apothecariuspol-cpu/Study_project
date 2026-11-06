@@ -1,0 +1,462 @@
+{# Единый попап «План» — вёрстка по макету Поп-ап.png / Figma node 6316-77 #}
+{% load static %}
+
+<style>
+
+/* Единый поп-ап плана — геометрия по утверждённому макету */
+.plan-modal-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px; background: rgba(0,0,0,.16);
+}
+.plan-modal-overlay[hidden] { display:none !important; }
+.plan-modal-dialog {
+    position:relative; box-sizing:border-box;
+    width:min(568px,calc(100vw - 24px));
+    height:min(819px,calc(100dvh - 24px));
+    min-height:0; max-height:none; margin:auto; padding:0;
+    overflow:hidden; border:0; border-radius:4px;
+    background:#fff; color:#080808; box-shadow:none;
+    font-family:"Jost Local","Jost",Arial,sans-serif;
+}
+.plan-modal-inner { position:relative; width:100%; height:100%; }
+.plan-modal-title {
+    position:absolute; left:170px; top:58px; margin:0;
+    font-family:"Jost Local","Jost",Arial,sans-serif;
+    font-size:24px; font-weight:400; line-height:1.2;
+    white-space:nowrap; text-align:left;
+}
+.plan-modal-subjects {
+    position:absolute; left:165px; top:127px;
+    display:flex; flex-direction:row; align-items:center; gap:24px;
+    margin:0; padding:0; font-size:13px; line-height:1.2;
+}
+.plan-modal-subjects .check {
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:13px; cursor:pointer; white-space:nowrap;
+}
+.plan-modal-subjects .check input {
+    width:13px; height:13px; margin:0; accent-color:#080808; cursor:pointer;
+}
+.plan-modal-topics {
+    position:absolute; left:171px; top:203px;
+    display:flex; flex-direction:column; gap:4px;
+    width:386px; max-height:132px; overflow:auto;
+    margin:0; padding:0; font-size:13px; line-height:1.75;
+}
+.plan-modal-topics .js-plan-subject-group { display:flex; flex-direction:column; gap:4px; }
+.plan-modal-topics .plan-topic-item { font-size:13px; line-height:1.75; color:#080808; }
+.plan-modal-topics .plan-topic-item a { color:inherit; text-decoration:none; }
+.plan-modal-topics .plan-topic-item a:hover { text-decoration:underline; }
+.plan-modal-topics .plan-topic-empty { color:#888; font-size:12px; }
+.plan-modal-tasks {
+    position:absolute; left:172px; top:383px;
+    display:grid; grid-template-columns:1fr; gap:0;
+    width:386px; margin:0; padding:0;
+}
+.plan-modal-task {
+    display:grid; grid-template-columns:144px 1fr 64px;
+    align-items:center; gap:0; min-height:27px;
+    font-size:13px; line-height:1.2;
+}
+.plan-modal-task > span:first-child { grid-column:1; grid-row:1; }
+.plan-modal-task-controls {
+    grid-column:2 / 4; grid-row:1;
+    display:inline-flex; align-items:center; justify-content:flex-start; gap:8px;
+}
+.plan-modal-task-count {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:10px; min-width:10px; height:14px;
+    font-size:13px; font-weight:500; line-height:1;
+    font-variant-numeric:tabular-nums;
+}
+.plan-modal-task-controls button {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:8px; height:14px; padding:0; border:0;
+    background:transparent; cursor:pointer; line-height:1;
+}
+.plan-modal-task-controls button[data-step="1"] { margin-left:4px; }
+.plan-modal-task-controls button img { display:block; width:8px; height:14px; }
+.plan-modal-task-controls button:hover { opacity:.6; }
+.plan-modal-changes {
+    position:absolute; left:152px; top:580px;
+    width:242px; margin:0; padding:0;
+}
+.plan-modal-changes-title {
+    margin:0 0 10px; font-size:13px; font-weight:400; text-align:center;
+}
+.plan-modal-progress-row + .plan-modal-progress-row { margin-top:7px; }
+.plan-modal-progress {
+    display:flex; align-items:stretch; width:242px; height:18px;
+    overflow:hidden; background:transparent; font-size:8px; line-height:1;
+}
+.plan-modal-progress-base {
+    display:flex; align-items:center; justify-content:flex-end;
+    flex:0 0 auto; min-width:0; padding:0 4px 0 7px;
+    background:#080808; color:#fff; font-size:8px; font-weight:700;
+    white-space:nowrap; box-sizing:border-box;
+}
+.plan-modal-progress-change {
+    display:flex; align-items:center; justify-content:center;
+    flex:0 0 auto; min-width:0; padding:0 3px;
+    border:0; background:#b1ffa5; color:#080808;
+    font-size:8px; font-weight:600; white-space:nowrap; box-sizing:border-box;
+}
+.plan-modal-quote {
+    position:absolute; left:215px; top:721px;
+    display:inline-flex; align-items:flex-start; margin:0;
+    padding:0 0 2px; border:0; border-bottom:1px solid #080808;
+    background:transparent; color:#080808;
+    font-family:"Jost Local","Jost",Arial,sans-serif;
+    font-size:13px; font-weight:400; line-height:1.2;
+    text-align:left; cursor:pointer; white-space:nowrap;
+}
+.plan-modal-quote:hover { opacity:.7; }
+@media(max-width:600px) {
+    .plan-modal-dialog { width:min(568px,calc(100vw - 16px)); height:min(819px,calc(100dvh - 16px)); }
+    .plan-modal-title { left:30%; top:7.1%; font-size:clamp(18px,4.2vw,24px); }
+    .plan-modal-subjects { left:29%; top:15.5%; gap:12px; }
+    .plan-modal-topics { left:30%; top:24.8%; width:68%; }
+    .plan-modal-tasks { left:30.3%; top:46.8%; width:68%; }
+    .plan-modal-task { grid-template-columns:42% 1fr 64px; }
+    .plan-modal-changes { left:28.5%; top:70.8%; width:46%; }
+    .plan-modal-progress { max-width:100%; }
+    .plan-modal-quote { left:37.9%; top:88%; }
+}
+
+</style>
+
+
+<div
+    class="plan-modal-overlay"
+    id="{{ plan_modal_id|default:'plan-modal-overlay' }}"
+    data-generate-url="{% url 'generate_daily_plan' %}"
+    data-csrf="{{ csrf_token }}"
+    data-mode="{{ rubricator_selection_mode|default:'auto' }}"
+    data-has-selection="{% if has_rubricator_selection %}true{% else %}false{% endif %}"
+    data-theory-base="10"
+    data-practice-base="8"
+    hidden
+>
+    <section class="plan-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="plan-modal-title-shared" tabindex="-1">
+        <div class="plan-modal-inner">
+            <h2 class="plan-modal-title" id="plan-modal-title-shared">План <span class="js-plan-modal-date">на день</span></h2>
+
+            <div class="plan-modal-subjects js-plan-modal-subjects" aria-label="Предметы">
+                {% if daily_plan_subjects %}
+                    {% for plan_subject in daily_plan_subjects %}
+                    <label class="check">
+                        <input
+                            type="checkbox"
+                            class="js-plan-subject-choice"
+                            value="{{ plan_subject.id }}"
+                            {% if plan_subject.is_selected %}checked{% endif %}
+                        >
+                        <span>{% if plan_subject.title == "Обществознание" %}Общество{% else %}{{ plan_subject.title }}{% endif %}</span>
+                    </label>
+                    {% endfor %}
+                {% else %}
+                    <label class="check">
+                        <input type="checkbox" class="js-plan-subject-choice" value="history" checked>
+                        <span>История</span>
+                    </label>
+                    <label class="check">
+                        <input type="checkbox" class="js-plan-subject-choice" value="society">
+                        <span>Общество</span>
+                    </label>
+                {% endif %}
+            </div>
+
+            <div class="plan-modal-topics js-plan-modal-topics" aria-live="polite">
+                {% if daily_plan_subjects %}
+                    {% for plan_subject in daily_plan_subjects %}
+                    <div class="js-plan-subject-group" data-subject-id="{{ plan_subject.id }}" {% if not plan_subject.is_selected %}hidden{% endif %}>
+                        {% for item in plan_subject.items %}
+                        <div class="plan-topic-item">
+                            {% if item.url %}<a href="{{ item.url }}">{{ item.title }}</a>{% else %}{{ item.title }}{% endif %}
+                        </div>
+                        {% empty %}
+                        <div class="plan-topic-empty">Сначала выбери темы в рубрикаторе.</div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="plan-topic-empty js-plan-topics-placeholder">Здесь появятся выбранные темы.</div>
+                {% endif %}
+            </div>
+
+            <div class="plan-modal-tasks" aria-label="Количество заданий">
+                <div class="plan-modal-task" data-task-type="maps">
+                    <span>Карты</span>
+                    <span class="plan-modal-task-controls">
+                        <button type="button" data-step="-1" aria-label="Меньше">
+                            <img src="{% static 'learning/icons/Vector_left.svg' %}" alt="" width="8" height="14">
+                        </button>
+                        <span class="plan-modal-task-count" data-count="2">2</span>
+                        <button type="button" data-step="1" aria-label="Больше">
+                            <img src="{% static 'learning/icons/Vector_right.svg' %}" alt="" width="8" height="14">
+                        </button>
+                    </span>
+                </div>
+                <div class="plan-modal-task" data-task-type="matching">
+                    <span>Сопоставление</span>
+                    <span class="plan-modal-task-controls">
+                        <button type="button" data-step="-1" aria-label="Меньше">
+                            <img src="{% static 'learning/icons/Vector_left.svg' %}" alt="" width="8" height="14">
+                        </button>
+                        <span class="plan-modal-task-count" data-count="5">5</span>
+                        <button type="button" data-step="1" aria-label="Больше">
+                            <img src="{% static 'learning/icons/Vector_right.svg' %}" alt="" width="8" height="14">
+                        </button>
+                    </span>
+                </div>
+                <div class="plan-modal-task" data-task-type="choice">
+                    <span>Выбор одного</span>
+                    <span class="plan-modal-task-controls">
+                        <button type="button" data-step="-1" aria-label="Меньше">
+                            <img src="{% static 'learning/icons/Vector_left.svg' %}" alt="" width="8" height="14">
+                        </button>
+                        <span class="plan-modal-task-count" data-count="7">7</span>
+                        <button type="button" data-step="1" aria-label="Больше">
+                            <img src="{% static 'learning/icons/Vector_right.svg' %}" alt="" width="8" height="14">
+                        </button>
+                    </span>
+                </div>
+                <div class="plan-modal-task" data-task-type="short">
+                    <span>Краткий ответ</span>
+                    <span class="plan-modal-task-controls">
+                        <button type="button" data-step="-1" aria-label="Меньше">
+                            <img src="{% static 'learning/icons/Vector_left.svg' %}" alt="" width="8" height="14">
+                        </button>
+                        <span class="plan-modal-task-count" data-count="9">9</span>
+                        <button type="button" data-step="1" aria-label="Больше">
+                            <img src="{% static 'learning/icons/Vector_right.svg' %}" alt="" width="8" height="14">
+                        </button>
+                    </span>
+                </div>
+                <div class="plan-modal-task" data-task-type="long">
+                    <span>Развернутый ответ</span>
+                    <span class="plan-modal-task-controls">
+                        <button type="button" data-step="-1" aria-label="Меньше">
+                            <img src="{% static 'learning/icons/Vector_left.svg' %}" alt="" width="8" height="14">
+                        </button>
+                        <span class="plan-modal-task-count" data-count="1">1</span>
+                        <button type="button" data-step="1" aria-label="Больше">
+                            <img src="{% static 'learning/icons/Vector_right.svg' %}" alt="" width="8" height="14">
+                        </button>
+                    </span>
+                </div>
+            </div>
+
+            <div class="plan-modal-changes">
+                <h3 class="plan-modal-changes-title">Ожидаемые изменения:</h3>
+                <div class="plan-modal-progress-row">
+                    <div class="plan-modal-progress" data-progress-kind="theory">
+                        <span class="plan-modal-progress-base" data-base="10" style="flex-basis: 195px;">10%</span>
+                        <span class="plan-modal-progress-change" data-change="2" style="flex-basis: 26px;">+2%</span>
+                    </div>
+                </div>
+                <div class="plan-modal-progress-row">
+                    <div class="plan-modal-progress" data-progress-kind="practice">
+                        <span class="plan-modal-progress-base" data-base="8" style="flex-basis: 175px;">8%</span>
+                        <span class="plan-modal-progress-change" data-change="12" style="flex-basis: 67px;">+12%</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="plan-modal-quote js-plan-modal-start" type="button">
+                Oh shit! Here we go again.
+            </button>
+        </div>
+    </section>
+</div>
+
+<script>
+(function () {
+    const overlayId = "{{ plan_modal_id|default:'plan-modal-overlay' }}";
+    const overlay = document.getElementById(overlayId);
+    if (!overlay) return;
+
+    const dialog = overlay.querySelector(".plan-modal-dialog");
+    const dateEl = overlay.querySelector(".js-plan-modal-date");
+    const startBtn = overlay.querySelector(".js-plan-modal-start");
+    const subjectChoices = Array.from(overlay.querySelectorAll(".js-plan-subject-choice"));
+
+    const THEORY_BASE = Number(overlay.dataset.theoryBase) || 10;
+    const PRACTICE_BASE = Number(overlay.dataset.practiceBase) || 8;
+    const BAR_WIDTH = 242;
+
+    function setDate() {
+        if (!dateEl) return;
+        dateEl.textContent = new Date().toLocaleDateString("ru-RU", {
+            day: "numeric",
+            month: "long"
+        });
+    }
+
+    function totalTasks() {
+        return Array.from(overlay.querySelectorAll(".plan-modal-task-count")).reduce(function (sum, el) {
+            return sum + Math.max(0, Number(el.dataset.count || el.textContent) || 0);
+        }, 0);
+    }
+
+    function selectedTopicCount() {
+        var n = overlay.querySelectorAll(".js-plan-modal-topics .plan-topic-item").length;
+        if (n === 0) {
+            n = Math.max(1, subjectChoices.filter(function (c) { return c.checked; }).length);
+        }
+        return n;
+    }
+
+    function updateExpectedChanges() {
+        var topics = selectedTopicCount();
+        var tasks = totalTasks();
+        var theoryGain = Math.min(100 - THEORY_BASE, Math.max(0, topics * 2));
+        var practiceGain = Math.min(100 - PRACTICE_BASE, Math.round(tasks * 12 / 23));
+
+        [
+            { kind: "theory", base: THEORY_BASE, gain: theoryGain },
+            { kind: "practice", base: PRACTICE_BASE, gain: practiceGain }
+        ].forEach(function (item) {
+            var row = overlay.querySelector('[data-progress-kind="' + item.kind + '"]');
+            if (!row) return;
+            var baseEl = row.querySelector(".plan-modal-progress-base");
+            var changeEl = row.querySelector(".plan-modal-progress-change");
+            if (!baseEl || !changeEl) return;
+
+            baseEl.textContent = item.base + "%";
+            changeEl.textContent = "+" + item.gain + "%";
+            baseEl.dataset.base = String(item.base);
+            changeEl.dataset.change = String(item.gain);
+
+            // Ширины базовых сегментов соответствуют макету (10% = 195px,
+            // 8% = 175px); прирост масштабируется отдельно для каждого показателя.
+            var basePx = item.kind === "theory" ? 195 : 175;
+            var gainScale = item.kind === "theory" ? 13 : (67 / 12);
+            var changePx = Math.round(item.gain * gainScale);
+            if (item.gain > 0 && changePx < 22) changePx = 22;
+            changePx = Math.min(changePx, Math.max(0, BAR_WIDTH - basePx));
+
+            baseEl.style.flexBasis = basePx + "px";
+            if (item.gain === 0) {
+                changeEl.style.display = "none";
+                changeEl.style.flexBasis = "0px";
+            } else {
+                changeEl.style.display = "";
+                changeEl.style.flexBasis = changePx + "px";
+            }
+        });
+    }
+
+    function syncSubjectGroups() {
+        var groups = Array.from(overlay.querySelectorAll(".js-plan-subject-group"));
+        subjectChoices.forEach(function (choice) {
+            var group = groups.find(function (g) {
+                return String(g.dataset.subjectId) === String(choice.value);
+            });
+            if (group) group.hidden = !choice.checked;
+        });
+        updateExpectedChanges();
+    }
+
+    overlay.querySelectorAll(".plan-modal-task").forEach(function (task) {
+        var counter = task.querySelector(".plan-modal-task-count");
+        task.querySelectorAll(".plan-modal-task-controls button").forEach(function (button) {
+            button.addEventListener("click", function () {
+                var current = Number(counter.dataset.count || counter.textContent) || 0;
+                var next = Math.max(0, Math.min(99, current + Number(button.dataset.step)));
+                counter.dataset.count = String(next);
+                counter.textContent = String(next);
+                updateExpectedChanges();
+            });
+        });
+    });
+
+    subjectChoices.forEach(function (choice) {
+        choice.addEventListener("change", syncSubjectGroups);
+    });
+
+    function openPlanModal(options) {
+        options = options || {};
+        setDate();
+        if (options.topicsHtml) {
+            var box = overlay.querySelector(".js-plan-modal-topics");
+            if (box) box.innerHTML = options.topicsHtml;
+        }
+        if (options.mode) overlay.dataset.mode = options.mode;
+        syncSubjectGroups();
+        updateExpectedChanges();
+        overlay.hidden = false;
+        document.body.style.overflow = "hidden";
+        if (dialog) dialog.focus();
+    }
+
+    function closePlanModal() {
+        overlay.hidden = true;
+        document.body.style.overflow = "";
+    }
+
+    window.PlanModal = window.PlanModal || {};
+    window.PlanModal.open = openPlanModal;
+    window.PlanModal.close = closePlanModal;
+    window.PlanModal.update = updateExpectedChanges;
+    window.PlanModal.overlayId = overlayId;
+
+    overlay.addEventListener("click", function (event) {
+        if (event.target === overlay) closePlanModal();
+    });
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !overlay.hidden) closePlanModal();
+    });
+
+    if (startBtn) {
+        startBtn.addEventListener("click", function () {
+            var selected = subjectChoices.find(function (c) { return c.checked; });
+            var groups = Array.from(overlay.querySelectorAll(".js-plan-subject-group"));
+            var group = selected && groups.find(function (g) {
+                return String(g.dataset.subjectId) === String(selected.value);
+            });
+            var firstLesson = (group && group.querySelector("a[href]")) ||
+                overlay.querySelector(".js-plan-modal-topics a[href]");
+            if (firstLesson) {
+                window.location.href = firstLesson.href;
+                return;
+            }
+            var form = document.getElementById("rubricator-form");
+            if (form) {
+                var actionInput = document.createElement("input");
+                actionInput.type = "hidden";
+                actionInput.name = "action";
+                actionInput.value = overlay.dataset.mode === "random" ? "random" : "choose";
+                form.appendChild(actionInput);
+                overlay.querySelectorAll(".plan-modal-task").forEach(function (task) {
+                    var type = task.dataset.taskType;
+                    var count = task.querySelector(".plan-modal-task-count");
+                    if (!type || !count) return;
+                    var hidden = document.createElement("input");
+                    hidden.type = "hidden";
+                    hidden.name = "task_" + type;
+                    hidden.value = count.dataset.count || count.textContent;
+                    form.appendChild(hidden);
+                });
+                form.submit();
+                return;
+            }
+            closePlanModal();
+        });
+    }
+
+    document.querySelectorAll(".js-open-plan-modal, .js-open-daily-plan").forEach(function (btn) {
+        if (btn.dataset.planBound === "1") return;
+        btn.addEventListener("click", function (e) {
+            if (btn.classList.contains("js-open-daily-plan") && btn.closest(".subject-panel")) return;
+            e.preventDefault();
+            if (btn.dataset.mode) overlay.dataset.mode = btn.dataset.mode;
+            openPlanModal({ mode: btn.dataset.mode });
+        });
+    });
+
+    setDate();
+    updateExpectedChanges();
+})();
+</script>
