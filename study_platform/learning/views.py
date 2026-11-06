@@ -496,6 +496,16 @@ def rubricator(request):
         else:
             topic.student_status = ""
 
+        # Кружок статуса относится к подтеме (уроку), не к родительской теме.
+        for lesson in topic.lessons.all():
+            state = lesson_progress.get(lesson.id)
+            if state and state["is_completed"]:
+                lesson.student_status = "full"
+            elif state and (state["is_started"] or state["is_completed"]):
+                lesson.student_status = "started"
+            else:
+                lesson.student_status = ""
+
     activity_rows = StudentTopicActivity.objects.filter(
         student=student, topic__in=topic_list
     ).select_related("topic")
@@ -514,10 +524,32 @@ def rubricator(request):
         )
         if not label.startswith("#"):
             label = "#" + label
+
+        # Хештег может называть тему, подтему или микротему.
+        normalized_label = "".join(ch.lower() for ch in label.lstrip("#") if ch.isalnum())
+        target_type = "topic"
+        target_id = topic.id
+        for lesson in topic.lessons.all():
+            normalized_lesson = "".join(ch.lower() for ch in lesson.title if ch.isalnum())
+            if normalized_label == normalized_lesson:
+                target_type = "subtopic"
+                target_id = lesson.id
+                break
+            for microtopic in lesson.microtopics.all():
+                normalized_microtopic = "".join(ch.lower() for ch in microtopic.title if ch.isalnum())
+                if normalized_label == normalized_microtopic:
+                    target_type = "microtopic"
+                    target_id = microtopic.id
+                    break
+            if target_type == "microtopic":
+                break
+
         opened_topics.append({
             "topic_id": topic.id,
             "subject_id": topic.subject_id,
             "label": label,
+            "target_type": target_type,
+            "target_id": target_id,
             "open_count": activity.open_count,
             "total_seconds": activity.total_seconds,
         })
