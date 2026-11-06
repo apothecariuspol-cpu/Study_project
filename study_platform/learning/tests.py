@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from .models import (
     Lesson,
+    MicroTopic,
     Student,
     StudentAccess,
     StudentLessonProgress,
@@ -282,18 +283,16 @@ class RubricatorTopicActivityTests(TestCase):
         session["student_id"] = self.student.id
         session.save()
 
-    def test_topic_status_markers_follow_student_lesson_progress(self):
-        completed_topic = Topic.objects.create(
-            subject=self.subject, title="Завершённая тема"
-        )
-        started_topic = Topic.objects.create(
-            subject=self.subject, title="Начатая тема"
-        )
+    def test_subtopic_status_markers_follow_student_lesson_progress(self):
+        topic = Topic.objects.create(subject=self.subject, title="Тема с подтемами")
         completed_lesson = Lesson.objects.create(
-            topic=completed_topic, title="Завершённый урок", is_published=True
+            topic=topic, title="Завершённая подтема", is_published=True
         )
         started_lesson = Lesson.objects.create(
-            topic=started_topic, title="Незавершённый урок", is_published=True
+            topic=topic, title="Начатая подтема", is_published=True
+        )
+        untouched_lesson = Lesson.objects.create(
+            topic=topic, title="Неначатая подтема", is_published=True
         )
         StudentLessonProgress.objects.create(
             student=self.student, lesson=completed_lesson,
@@ -307,8 +306,10 @@ class RubricatorTopicActivityTests(TestCase):
         response = self.client.get(reverse("rubricator"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'alt="Тема полностью просмотрена"')
-        self.assertContains(response, 'alt="Тема начата, но не завершена"')
+        self.assertContains(response, 'alt="Подтема пройдена"')
+        self.assertContains(response, 'alt="Подтема начата"')
+        self.assertContains(response, 'alt="Подтема не начата"')
+        self.assertNotContains(response, 'alt="Тема полностью просмотрена"')
 
     def test_activity_endpoint_counts_opens_and_study_seconds(self):
         topic = Topic.objects.create(subject=self.subject, title="Популярная тема")
@@ -328,11 +329,17 @@ class RubricatorTopicActivityTests(TestCase):
         self.assertEqual(activity.open_count, 1)
         self.assertEqual(activity.total_seconds, 42)
 
-    def test_popular_topic_tag_uses_saved_topic_hashtag_and_link_target(self):
+    def test_popular_hashtags_target_matching_subtopics_and_microtopics(self):
         topic = Topic.objects.create(
             subject=self.subject,
             title="Пётр Первый",
-            hashtags="#ПетрПервый #Реформы",
+            hashtags="#ПетрПервый #КрещениеРуси #КняжескийДвор",
+        )
+        lesson = Lesson.objects.create(
+            topic=topic, title="Крещение Руси", is_published=True
+        )
+        microtopic = MicroTopic.objects.create(
+            lesson=lesson, title="Княжеский двор", is_published=True
         )
         StudentTopicActivity.objects.create(
             student=self.student, topic=topic, open_count=3, total_seconds=90
@@ -343,3 +350,5 @@ class RubricatorTopicActivityTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "#ПетрПервый")
         self.assertContains(response, f'data-topic-id="{topic.id}"')
+        self.assertContains(response, f'data-target-type="lesson" data-target-id="{lesson.id}"')
+        self.assertContains(response, f'data-target-type="microtopic" data-target-id="{microtopic.id}"')
