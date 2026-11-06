@@ -25,6 +25,11 @@ urlpatterns = [
         name="rubricator",
     ),
     path(
+        "track-topic-activity/",
+        views.track_topic_activity,
+        name="track_topic_activity",
+    ),
+    path(
         "generate-daily-plan/",
         views.generate_daily_plan,
         name="generate_daily_plan",
