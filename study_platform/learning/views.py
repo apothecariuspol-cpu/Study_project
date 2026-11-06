@@ -569,7 +569,7 @@ def track_topic_activity(request):
     try:
         payload = json.loads(request.body.decode("utf-8") or "{}")
         topic_id = int(payload.get("topic_id"))
-        seconds = max(0, min(300, int(payload.get("seconds", 0))))
+        seconds = max(0, min(86400, int(payload.get("seconds", 0))))
         opened = bool(payload.get("opened", False))
     except (TypeError, ValueError, json.JSONDecodeError, UnicodeDecodeError):
         return JsonResponse({"ok": False, "error": "invalid_payload"}, status=400)
