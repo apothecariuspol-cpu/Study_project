@@ -813,6 +813,12 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
  grid-column:2; grid-row:1;
 }
 
+
+/* Чуть увеличиваем расстояние между числом и правой стрелкой счётчика. */
+.plan-task-controls button[data-step="1"],
+.daily-plan-task .plan-task-controls button[data-step="1"] { margin-left:4px; }
+.mistake-demo-note { margin:8px 0 0; font-size:11px; color:#777; font-style:italic; }
+
 </style>
 </head>
 
@@ -1054,12 +1060,15 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                         {% empty %}
                         {% if student.is_demo %}
                         <li><span class="mistake-name">Дмитрий Донской</span><div class="mini-track"><i style="width:42%"></i></div><small>42% верно</small></li>
-                        <li><span class="mistake-name">Иван III</span><div class="mini-track"><i style="width:27%"></i></div><small>27% верно</small></li>
+
                         {% else %}
                         <li class="empty">Пока косяков нет</li>
                         {% endif %}
                         {% endfor %}
                     </ul>
+                    {% if student.is_demo %}
+                    <p class="mistake-demo-note">*Пример для демонстрации. Данные обновятся.*</p>
+                    {% endif %}
 
                     {% if tab.mistakes or student.is_demo %}
                     <div class="section-action-icons">
@@ -1174,7 +1183,7 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
                 {% for item in plan_subject.items %}
                 <div class="daily-plan-topic">
                     {% if item.url %}<a href="{{ item.url }}">{{ item.title }}</a>{% else %}<span>{{ item.title }}</span>{% endif %}
-                    {% if item.parent %}<small>{{ item.parent }}</small>{% endif %}
+
                 </div>
                 {% empty %}
                 <div class="daily-plan-empty">
@@ -1626,11 +1635,7 @@ document.querySelectorAll(".subject-panel").forEach(function (panel) {
                 link.href = item.url;
                 link.textContent = item.title;
                 wrapper.appendChild(link);
-                if (item.parent) {
-                    const parent = document.createElement("small");
-                    parent.textContent = item.parent;
-                    wrapper.appendChild(parent);
-                }
+
                 group.appendChild(wrapper);
             });
         } catch (error) {
