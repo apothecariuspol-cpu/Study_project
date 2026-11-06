@@ -158,7 +158,7 @@ button {
     flex: 1;
     width: min(58.3125rem, calc(100% - 2.5rem));
     margin: 0 auto;
-    padding-top: 9.25rem;
+    padding-top: 5.25rem;
     display: grid;
     grid-template-columns: 9.1875rem minmax(0, 1fr);
     align-items: start;
@@ -253,6 +253,15 @@ button {
     gap: .625rem;
     cursor: pointer;
 }
+.subject-icon {
+    display: block;
+    width: 1.0625rem;
+    height: 1.0625rem;
+    flex: 0 0 1.0625rem;
+}
+.subject-icon--checked { display: none; }
+.subject-filter:checked ~ .subject-icon--empty { display: none; }
+.subject-filter:checked ~ .subject-icon--checked { display: block; }
 
 .subject-check input,
 .topic-check input,
@@ -326,6 +335,18 @@ input:indeterminate + .check-box::after {
     flex-wrap: wrap;
     gap: .25rem .85rem;
 }
+.topic-tag {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    cursor: pointer;
+}
+.topic-tag:hover,
+.topic-tag:focus-visible,
+.topic-tag.is-active { font-weight: 700; text-decoration: underline; text-underline-offset: .15em; }
 
 .actions {
     display: flex;
@@ -373,7 +394,7 @@ input:indeterminate + .check-box::after {
 .topic-list {
     display: flex;
     flex-direction: column;
-    gap: 2.9rem;
+    gap: 1.35rem;
     margin-top: 3.25rem;
 }
 
@@ -395,6 +416,8 @@ input:indeterminate + .check-box::after {
     gap: .5rem;
     min-width: 0;
 }
+.topic-title-wrap { display: flex; align-items: center; min-width: 0; }
+.topic-expand { margin-left: .1rem; }
 
 .topic-check {
     flex: 0 0 auto;
@@ -404,6 +427,47 @@ input:indeterminate + .check-box::after {
     font-size: 1.5rem;
     font-weight: 400;
     line-height: 1.25;
+}
+.topic-title.is-highlighted { font-weight: 700; }
+.topic-title.hint-tip { position: relative; cursor: help; }
+.topic-title.hint-tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + .55rem);
+    left: 50%;
+    z-index: 30;
+    width: max-content;
+    max-width: min(17rem, 75vw);
+    padding: .6rem .8rem;
+    border: 0;
+    border-radius: .55rem;
+    background: #fff;
+    color: #080808;
+    box-shadow: 0 .2rem .9rem rgb(0 0 0 / 14%);
+    font-size: .875rem;
+    font-weight: 400;
+    line-height: 1.35;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, .2rem);
+    pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease, visibility .15s ease;
+}
+.topic-title.hint-tip:hover::after,
+.topic-title.hint-tip:focus::after,
+.topic-title.hint-tip:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
+.topic-status {
+    display: block;
+    width: .75rem;
+    height: .75rem;
+    flex: 0 0 .75rem;
+    margin-right: -.2rem;
 }
 
 .topic-period {
@@ -1094,7 +1158,7 @@ footer {
             </p>
         </header>
 
-        <form id="rubricator-form" method="post" data-generate-url="{% url 'generate_daily_plan' %}">
+        <form id="rubricator-form" method="post" data-generate-url="{% url 'generate_daily_plan' %}" data-track-url="{% url 'track_topic_activity' %}">
             {% csrf_token %}
 
             <div class="subjects" aria-label="Выбор предметов">
@@ -1107,7 +1171,8 @@ footer {
                         value="{{ subject.id }}"
                         {% if subject.id|stringformat:"s" in selected_subject_ids %}checked{% elif not has_saved_selection and forloop.first %}checked{% endif %}
                     >
-                    <span class="check-box"></span>
+                    <img class="subject-icon subject-icon--empty" src="{% static 'learning/icons/Vector_empty.svg' %}" alt="">
+                    <img class="subject-icon subject-icon--checked" src="{% static 'learning/icons/Vector.svg' %}" alt="">
                     {% if subject.title == "Обществознание" %}Общество{% else %}{{ subject.title }}{% endif %}
                 </label>
                 {% empty %}
@@ -1117,18 +1182,15 @@ footer {
                 {% endfor %}
             </div>
 
+            {% if popular_topics %}
             <div class="subject-tags" aria-label="Популярные темы">
                 <div class="tag-line">
-                    <span>#ПетрПервый</span>
-                    <span>#ИванГрозный</span>
-                    <span>#барокко</span>
-                    <span>#мануфактура</span>
-                </div>
-                <div class="tag-line">
-                    <span>#ВасилийГолицын</span>
-                    <span>#1941-1945</span>
+                    {% for item in popular_topics %}
+                    <button class="topic-tag" type="button" data-topic-id="{{ item.topic_id }}" data-subject-id="{{ item.subject_id }}">{{ item.label }}</button>
+                    {% endfor %}
                 </div>
             </div>
+            {% endif %}
 
             <div class="actions">
                 <button
@@ -1165,6 +1227,11 @@ footer {
 
                     {% for topic in subject.topics.all %}
                     <article class="topic-item{% if forloop.first %} is-open{% endif %}" data-topic-id="{{ topic.id }}">
+                        {% if topic.student_status == "full" %}
+                        <img class="topic-status" src="{% static 'learning/icons/indicator_full.svg' %}" alt="Тема полностью просмотрена">
+                        {% elif topic.student_status == "started" %}
+                        <img class="topic-status" src="{% static 'learning/icons/indicator_medium.svg' %}" alt="Тема начата, но не завершена">
+                        {% endif %}
 
                         <div class="topic-heading">
                             <label class="topic-check">
@@ -1180,10 +1247,8 @@ footer {
                             </label>
 
                             <div class="topic-title-wrap">
-                                <span class="topic-title">{{ topic.title }}</span>
+                                <span class="topic-title{% if topic.period %} hint-tip{% endif %}" {% if topic.period %}data-tip="{{ topic.period }}" tabindex="0"{% endif %}>{{ topic.title }}</span>
                             </div>
-
-                            <span class="topic-period">{{ topic.period }}</span>
 
                             <button
                                 class="topic-expand"
@@ -1730,6 +1795,45 @@ footer {
         });
     });
 
+    // Сбор статистики открытий и времени, пока тема раскрыта.
+    let activeTopicId = null;
+    let topicTimerStartedAt = 0;
+    const csrfInput = form.querySelector('input[name="csrfmiddlewaretoken"]');
+    function sendTopicActivity(topicId, seconds, opened) {
+        if (!topicId) return;
+        fetch(form.dataset.trackUrl, {
+            method: "POST",
+            credentials: "same-origin",
+            keepalive: true,
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfInput ? csrfInput.value : ""
+            },
+            body: JSON.stringify({ topic_id: topicId, seconds: seconds || 0, opened: Boolean(opened) })
+        }).catch(function () {});
+    }
+    function flushTopicTime() {
+        if (!activeTopicId || !topicTimerStartedAt) return;
+        const seconds = Math.floor((Date.now() - topicTimerStartedAt) / 1000);
+        if (seconds > 0) sendTopicActivity(activeTopicId, seconds, false);
+        topicTimerStartedAt = document.hidden ? 0 : Date.now();
+    }
+    function activateTopicTimer(topicId, countOpen) {
+        flushTopicTime();
+        activeTopicId = topicId || null;
+        if (activeTopicId && countOpen) sendTopicActivity(activeTopicId, 0, true);
+        topicTimerStartedAt = activeTopicId && !document.hidden ? Date.now() : 0;
+    }
+    document.addEventListener("visibilitychange", function () {
+        if (document.hidden) {
+            flushTopicTime();
+            topicTimerStartedAt = 0;
+        } else if (activeTopicId) {
+            topicTimerStartedAt = Date.now();
+        }
+    });
+    window.addEventListener("pagehide", flushTopicTime);
+
     // Раскрытие и сворачивание списка подтем.
     form.querySelectorAll(".topic-expand").forEach(function (button) {
         button.addEventListener("click", function () {
@@ -1741,6 +1845,13 @@ footer {
                 "aria-label",
                 isOpen ? "Свернуть подтемы" : "Раскрыть подтемы"
             );
+            if (isOpen) {
+                activateTopicTimer(topic.dataset.topicId, true);
+            } else if (activeTopicId === topic.dataset.topicId) {
+                flushTopicTime();
+                activeTopicId = null;
+                topicTimerStartedAt = 0;
+            }
         });
     });
 
@@ -1779,6 +1890,53 @@ footer {
     form.querySelectorAll(".subject-filter").forEach(function (element) {
         element.addEventListener("change", updateSubjectPanels);
     });
+
+    // Хештег переключает предмет, раскрывает нужную тему и прокручивает к ней.
+    let highlightedTopic = null;
+    form.querySelectorAll(".topic-tag").forEach(function (tag) {
+        tag.addEventListener("click", function () {
+            const subjectId = tag.dataset.subjectId;
+            const topicId = tag.dataset.topicId;
+            const subjectInput = form.querySelector('.subject-filter[value="' + subjectId + '"]');
+            if (subjectInput) {
+                form.querySelectorAll(".subject-filter").forEach(function (input) {
+                    input.checked = input === subjectInput;
+                });
+                updateSubjectPanels();
+            }
+
+            const topic = form.querySelector('.topic-item[data-topic-id="' + topicId + '"]');
+            if (!topic) return;
+            const expand = topic.querySelector(":scope > .topic-heading .topic-expand");
+            const wasOpen = topic.classList.contains("is-open");
+            if (!wasOpen && expand) {
+                topic.classList.add("is-open");
+                expand.setAttribute("aria-expanded", "true");
+                expand.setAttribute("aria-label", "Свернуть подтемы");
+            }
+            if (wasOpen && activeTopicId === topicId) {
+                flushTopicTime();
+                activeTopicId = topicId;
+                topicTimerStartedAt = document.hidden ? 0 : Date.now();
+            } else {
+                activateTopicTimer(topicId, !wasOpen);
+            }
+
+            if (highlightedTopic) highlightedTopic.classList.remove("is-highlighted");
+            const title = topic.querySelector(":scope > .topic-heading .topic-title");
+            if (title) {
+                title.classList.add("is-highlighted");
+                highlightedTopic = title;
+            }
+            form.querySelectorAll(".topic-tag").forEach(function (item) {
+                item.classList.toggle("is-active", item === tag);
+            });
+            topic.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+    });
+
+    const initiallyOpenTopic = form.querySelector(".subject-panel.is-active .topic-item.is-open");
+    if (initiallyOpenTopic) activateTopicTimer(initiallyOpenTopic.dataset.topicId, true);
 
     updateSubjectPanels();
 })();
