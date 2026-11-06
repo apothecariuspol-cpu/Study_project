@@ -212,6 +212,31 @@ class StudentLessonProgress(models.Model):
         return f"{self.student.name} — {self.lesson.title}"
 
 
+class StudentTopicActivity(models.Model):
+    """Персональная статистика открытия и времени изучения темы."""
+
+    student = models.ForeignKey(
+        Student, on_delete=models.CASCADE, related_name="topic_activity", verbose_name="Ученик"
+    )
+    topic = models.ForeignKey(
+        Topic, on_delete=models.CASCADE, related_name="student_activity", verbose_name="Тема"
+    )
+    open_count = models.PositiveIntegerField("Количество открытий", default=0)
+    total_seconds = models.PositiveIntegerField("Время изучения, секунд", default=0)
+    last_opened_at = models.DateTimeField("Последнее открытие", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Активность ученика по теме"
+        verbose_name_plural = "Активность учеников по темам"
+        constraints = [
+            models.UniqueConstraint(fields=("student", "topic"), name="unique_student_topic_activity"),
+        ]
+        ordering = ["-open_count", "-total_seconds", "id"]
+
+    def __str__(self):
+        return f"{self.student.name} — {self.topic.title}"
+
+
 class StudentBestResult(models.Model):
     """Лучшее зафиксированное прохождение ученика по предмету."""
 
