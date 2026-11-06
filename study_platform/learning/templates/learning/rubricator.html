@@ -1887,7 +1887,20 @@ footer {
     }
 
     form.querySelectorAll(".subject-filter").forEach(function (element) {
-        element.addEventListener("change", updateSubjectPanels);
+        element.addEventListener("change", function () {
+            updateSubjectPanels();
+            const activePanel = element.checked
+                ? form.querySelector('.subject-panel[data-subject-id="' + element.value + '"]')
+                : form.querySelector(".subject-panel.is-active");
+            const openTopic = activePanel && activePanel.querySelector(".topic-item.is-open");
+            if (openTopic) {
+                activateTopicTimer(openTopic.dataset.topicId, true);
+            } else {
+                flushTopicTime();
+                activeTopicId = null;
+                topicTimerStartedAt = 0;
+            }
+        });
     });
 
     // Хештег переключает предмет, раскрывает нужную тему и прокручивает к ней.
