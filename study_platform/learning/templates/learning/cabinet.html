@@ -803,6 +803,16 @@ footer { margin-top: 7rem; padding: 1rem 0 2.5rem; }
 .plan-quote-button:hover, .daily-plan-quote:hover { text-decoration:none; }
 @media(max-width:600px) { .plan-task, .daily-plan-task { grid-template-columns:42% auto; } }
 
+
+/* Уточнение селекторов после перестановки элементов счётчика. */
+.daily-plan-subjects input {
+ position:absolute; width:1px; height:1px; opacity:0; margin:0;
+}
+.plan-task > span.plan-task-controls:nth-child(2),
+.daily-plan-task > span.plan-task-controls:nth-child(2) {
+ grid-column:2; grid-row:1;
+}
+
 </style>
 </head>
 
